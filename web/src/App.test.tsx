@@ -4,6 +4,18 @@ import App from "./App";
 import { tracksFor } from "./archive";
 
 describe("Live Music Archive", () => {
+  it("uses concert MPEG4 audio only when preferred audio derivatives are absent", () => {
+    expect(tracksFor("show", [{ name: "concert.mp4" }])[0].name).toBe(
+      "concert.mp4",
+    );
+    expect(
+      tracksFor("show", [
+        { name: "concert.mp4" },
+        { name: "concert.mp3", original: "concert.mp4" },
+        { name: "private.mp4", private: true },
+      ]).map((track) => track.name),
+    ).toEqual(["concert.mp3"]);
+  });
   it("renders catalog search and its loading state", () => {
     const html = renderToString(<App />);
     expect(html).toContain("Search the catalog");

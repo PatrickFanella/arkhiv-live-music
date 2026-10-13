@@ -11,5 +11,6 @@ its metadata worker, operator and database. Engine and viewer release receipts
 are independently pinned under `deploy/` and upgraded through Arkhiv's registry.
 
 The design system remains undecided. The current interface is a functional scaffold.
-See the root README for the pinned core 0.4.0 release, optional development override,
+See the root README for the pinned core 0.4.1 release, full-import/review workers,
+optional development override,
 operator commands and verification.
