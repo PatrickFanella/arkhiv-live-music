@@ -12,32 +12,30 @@ and reach this app through the same release-upgrade workflow as its siblings.
 Viewer and engine upgrades remain separate. The visual design system has not
 been selected; the current interface is a functional scaffold.
 
-## Current release boundary
+## Shared releases
 
-The published viewer pin is 0.4.2 and the retained engine receipt is core 0.3.0.
-The source metadata catalog is prepared for the next shared core release, 0.4.0,
-in [Arkhiv PR 126](https://git.subcult.tv/subculture-collective/arkhiv/pulls/126).
-Until that release is published and this app adopts its immutable digest, use
-the development override against Arkhiv's `feat/etree-metadata-catalog` checkout.
-The published 0.3.0 image alone cannot run the new metadata workflow.
+The published viewer pin is 0.4.2 and the engine receipt pins core 0.4.0, including
+the source metadata catalog from
+[Arkhiv PR 126](https://git.subcult.tv/subculture-collective/arkhiv/pulls/126).
+The engine image uses an immutable registry digest. The viewer retains its
+original core 0.3.0 qualification receipt; core 0.4.0 preserves those API contracts
+and migration checksums.
 
 The frontend requires `source_catalog` module 1 and checks `/api/version` before
 loading its catalog. `make verify` validates code, configuration and pin provenance;
-it does not claim that the retained published image contains the new module.
+it rejects engine receipts that lack the required modules.
 
-## Run the shared development engine
+## Run the app
 
-Requires Docker, an Arkhiv checkout containing the source-catalog changes, and
-pnpm 10.33.0 for frontend development. Copy `.env.example` to `.env` and choose
-unused local ports and credentials. Set `ARKHIV_CORE_SOURCE` to that checkout.
+Requires Docker and pnpm 10.33.0 for frontend development. Copy `.env.example`
+to `.env` and choose unused local ports and credentials.
 
 ```bash
-docker compose --env-file .env --env-file deploy/archive-core.env \
-  -f docker-compose.yml -f docker-compose.core-dev.yml up --build
+docker compose --env-file .env --env-file deploy/archive-core.env up --build
 ```
 
-This builds the actual Arkhiv core from its repository. Initialization applies
-Arkhiv migrations and selects the etree collection. The metadata worker repeatedly
+This uses the published Arkhiv core. Initialization applies Arkhiv migrations
+and selects the etree collection. The metadata worker repeatedly
 runs bounded cursor discovery and full-metadata imports. A complete collection
 import can take days; counts and incomplete discovery remain visible. It never
 acquires audio. The web app defaults to http://localhost:5173.
@@ -45,10 +43,12 @@ acquires audio. The web app defaults to http://localhost:5173.
 For frontend development, run `pnpm --dir web dev`. Vite proxies `/api` to port
 8080 by default; set `API_PROXY=http://127.0.0.1:YOUR_API_PORT` if needed.
 
-Once the new shared engine release is adopted, omit the development override:
+For shared-engine development, set `ARKHIV_CORE_SOURCE` to an Arkhiv checkout
+and build its actual core with the optional override:
 
 ```bash
-docker compose --env-file .env --env-file deploy/archive-core.env up --build
+docker compose --env-file .env --env-file deploy/archive-core.env \
+  -f docker-compose.yml -f docker-compose.core-dev.yml up --build
 ```
 
 ## Metadata and media

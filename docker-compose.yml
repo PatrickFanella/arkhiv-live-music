@@ -1,6 +1,5 @@
 # Use --env-file deploy/archive-core.env for the reviewed engine pin.
-# The source-catalog feature needs the upcoming shared release; use the core-dev
-# override with its Arkhiv checkout until that release is published and adopted.
+# The optional core-dev override builds shared-engine changes from Arkhiv.
 x-core-environment: &core-environment
   DATABASE_URL: postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-app}?sslmode=disable
   VHNESS_COLLECTION: etree

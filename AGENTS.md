@@ -18,10 +18,10 @@ normalization provenance and editorial corrections remain independent. Re-import
 must preserve corrections. Media acquisition is a separate operator workflow;
 metadata workers never fetch audio. Playback uses engine-resolved, reviewed files.
 
-The required source-catalog module is not in the retained core 0.3.0 release. Use
-`docker-compose.core-dev.yml` with the canonical Arkhiv feature checkout for local
-work until the new shared release is published and its pin adopted. The frontend
-checks module compatibility before loading its catalog.
+Core 0.4.0 supplies source-catalog module 1. Use the pinned published engine for
+normal development. `docker-compose.core-dev.yml` optionally builds the actual
+core from a canonical Arkhiv checkout for shared-engine changes. The frontend
+and dependency checks require compatible module versions.
 
 The frontend owns its composition and future design system. Its current styling
 is a functional scaffold; no final visual system has been selected. Use the kit

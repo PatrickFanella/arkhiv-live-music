@@ -17,4 +17,4 @@ print('Shared pins verified: core', core['version'], 'viewer', viewer['version']
 required = json.loads((root / 'deploy/required-modules.json').read_text())
 missing = [key for key, version in required.items() if core['modules'].get(key) != version]
 if missing:
-    print('Published pin lacks', ', '.join(missing), '— use the shared core development override until its release is adopted.')
+    raise SystemExit('Published engine lacks required modules: ' + ', '.join(missing))
