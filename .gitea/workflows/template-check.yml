@@ -24,11 +24,7 @@ jobs:
           node-version: 22
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: backend/go.mod
-          cache: false
-      - name: Verify template baseline
+      - name: Verify shared-engine consumer
         run: make verify
       - name: Build container images
         run: make compose-build
