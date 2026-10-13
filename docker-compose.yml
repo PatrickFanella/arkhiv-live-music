@@ -1,3 +1,12 @@
+# Use --env-file deploy/archive-core.env for the reviewed engine pin.
+# The source-catalog feature needs the upcoming shared release; use the core-dev
+# override with its Arkhiv checkout until that release is published and adopted.
+x-core-environment: &core-environment
+  DATABASE_URL: postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-app}?sslmode=disable
+  VHNESS_COLLECTION: etree
+  API_ADDR: 0.0.0.0:8080
+  ARKHIV_PUBLIC: "0"
+
 services:
   postgres:
     image: postgres:17
@@ -6,29 +15,67 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-app}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-app} -d $${POSTGRES_DB:-app}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  initialize:
+    image: ${ARCHIVE_ENGINE_IMAGE:?Load deploy/archive-core.env}
+    entrypoint: [/bin/sh, -c]
+    command:
+      - >-
+        vhness migrate &&
+        vhness collection --collection etree --policy ${COLLECTION_POLICY:-source_stream}
+        --budget ${MEDIA_BUDGET:-0} --reserve ${MEDIA_RESERVE:-0} &&
+        vhness discover-catalog --pages 0 --items 0
+    environment: *core-environment
+    depends_on:
+      postgres: {condition: service_healthy}
 
   api:
-    build: ./backend
-    environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-app}?sslmode=disable
-    depends_on:
-      postgres:
-        condition: service_healthy
+    image: ${ARCHIVE_ENGINE_IMAGE:?Load deploy/archive-core.env}
+    environment: *core-environment
+    volumes:
+      - media-data:/media:ro
+      - derivative-data:/derivatives:ro
     ports:
-      - "${API_PORT:-8080}:8080"
+      - "127.0.0.1:${API_PORT:-8080}:8080"
+    depends_on:
+      initialize: {condition: service_completed_successfully}
+
+  metadata-worker:
+    image: ${ARCHIVE_ENGINE_IMAGE:?Load deploy/archive-core.env}
+    entrypoint: [/bin/sh, -c]
+    command:
+      - while true; do vhness discover-catalog --pages 1 --items 25 --delay 1s --timeout 10m; sleep 15; done
+    environment: *core-environment
+    depends_on:
+      initialize: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  operator:
+    profiles: [operator]
+    image: ${ARCHIVE_ENGINE_IMAGE:?Load deploy/archive-core.env}
+    environment: *core-environment
+    volumes:
+      - media-data:/media
+      - derivative-data:/derivatives
+      - ${IMPORT_ROOT:-./data/imports}:/imports:ro
+    depends_on:
+      initialize: {condition: service_completed_successfully}
 
   web:
     build: ./web
     ports:
-      - "${WEB_PORT:-5173}:80"
+      - "127.0.0.1:${WEB_PORT:-5173}:80"
+    depends_on: [api]
 
 volumes:
   postgres-data:
+  media-data:
+  derivative-data:
