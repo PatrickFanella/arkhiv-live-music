@@ -5,6 +5,8 @@ import re
 
 root = Path(__file__).resolve().parents[1]
 core = json.loads((root / 'deploy/core-release.json').read_text())
+if not re.fullmatch(r'\d+\.\d+\.\d+', core['version']) or tuple(map(int, core['version'].split('.'))) < (0, 4, 1):
+    raise SystemExit('Batch source playback review requires core 0.4.1 or newer')
 viewer = json.loads((root / 'deploy/viewer-release.json').read_text())
 package = json.loads((root / 'web/package.json').read_text())
 if core['artifact_kind'] != 'core' or not re.fullmatch(r'git.subcult.tv/subculture-collective/archive-core@sha256:[0-9a-f]{64}', core['engine_digest']):

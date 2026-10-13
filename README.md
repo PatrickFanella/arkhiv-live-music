@@ -14,18 +14,11 @@ been selected; the current interface is a functional scaffold.
 
 ## Shared releases
 
-The full-import playback workflow on this feature branch requires core 0.4.1
-and viewer 0.4.3 from
+The published viewer pin is 0.4.3 and the engine receipt pins core 0.4.1, including
+the source metadata catalog, batch playback reviews and nested audio support from
 [Arkhiv PR 129](https://git.subcult.tv/subculture-collective/arkhiv/pulls/129).
-Until those artifacts are published and their pins adopted here, use the shared
-development override for the reviewer. The retained published pins below support
-metadata import; viewer 0.4.2 does not support nested audio source paths.
-
-The published viewer pin is 0.4.2 and the engine receipt pins core 0.4.0, including
-the source metadata catalog from
-[Arkhiv PR 126](https://git.subcult.tv/subculture-collective/arkhiv/pulls/126).
 The engine image uses an immutable registry digest. The viewer retains its
-original core 0.3.0 qualification receipt; core 0.4.0 preserves those API contracts
+core 0.3.0 API compatibility receipt; core 0.4.1 preserves those API contracts
 and migration checksums.
 
 The frontend requires `source_catalog` module 1 and checks `/api/version` before
@@ -49,6 +42,8 @@ acquires audio. The web app defaults to http://localhost:5173.
 
 For frontend development, run `pnpm --dir web dev`. Vite proxies `/api` to port
 8080 by default; set `API_PROXY=http://127.0.0.1:YOUR_API_PORT` if needed.
+After a kit upgrade, restart Vite with `pnpm --dir web dev --force` to refresh
+its dependency cache.
 
 For shared-engine development, set `ARKHIV_CORE_SOURCE` to an Arkhiv checkout
 and build its actual core with the optional override:

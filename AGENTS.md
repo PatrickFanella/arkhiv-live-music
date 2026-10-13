@@ -18,7 +18,8 @@ normalization provenance and editorial corrections remain independent. Re-import
 must preserve corrections. Media acquisition is a separate operator workflow;
 metadata workers never fetch audio. Playback uses engine-resolved, reviewed files.
 
-Core 0.4.0 supplies source-catalog module 1. Use the pinned published engine for
+Core 0.4.1 supplies source-catalog module 1, batch playback reviews and nested
+source audio. Viewer 0.4.3 validates the resulting URLs. Use the pinned engine for
 normal development. `docker-compose.core-dev.yml` optionally builds the actual
 core from a canonical Arkhiv checkout for shared-engine changes. The frontend
 and dependency checks require compatible module versions.
