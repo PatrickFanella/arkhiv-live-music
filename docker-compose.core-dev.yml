@@ -13,5 +13,7 @@ services:
     <<: *development-core
   metadata-worker:
     <<: *development-core
+  playback-reviewer:
+    <<: *development-core
   operator:
     <<: *development-core

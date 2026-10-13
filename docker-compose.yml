@@ -51,11 +51,37 @@ services:
     image: ${ARCHIVE_ENGINE_IMAGE:?Load deploy/archive-core.env}
     entrypoint: [/bin/sh, -c]
     command:
-      - while true; do vhness discover-catalog --pages 1 --items 25 --delay 1s --timeout 10m; sleep 15; done
+      - >-
+        while true; do
+        available_kib=$$(df -Pk / | awk 'NR==2 {print $$4}');
+        if [ "$$available_kib" -lt 20971520 ]; then
+        echo 'Metadata import paused: free space below 20 GiB reserve'; sleep 300; continue; fi;
+        vhness discover-catalog --pages 1 --items 100 --delay 1s --timeout 10m; sleep 30; done
     environment: *core-environment
     depends_on:
       initialize: {condition: service_completed_successfully}
     restart: unless-stopped
+    logging:
+      options: {max-size: "10m", max-file: "3"}
+
+  playback-reviewer:
+    profiles: [playback]
+    image: ${ARCHIVE_ENGINE_IMAGE:?Load deploy/archive-core.env}
+    entrypoint: [/bin/sh, -c]
+    command:
+      - >-
+        test -n "$$PLAYBACK_REVIEW_NOTES" || { echo 'Set explicit PLAYBACK_REVIEW_NOTES before starting'; exit 1; };
+        while true; do
+        vhness review-source-audio-batch --items 100 --timeout 10m --notes "$$PLAYBACK_REVIEW_NOTES";
+        sleep 30; done
+    environment:
+      <<: *core-environment
+      PLAYBACK_REVIEW_NOTES: ${PLAYBACK_REVIEW_NOTES:-}
+    depends_on:
+      initialize: {condition: service_completed_successfully}
+    restart: unless-stopped
+    logging:
+      options: {max-size: "10m", max-file: "3"}
 
   operator:
     profiles: [operator]

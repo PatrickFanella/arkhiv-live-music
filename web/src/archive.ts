@@ -42,6 +42,14 @@ export type Detail = {
   }[];
 };
 export type ImportStatus = {
+  playback?: {
+    reviewed: number;
+    pending: number;
+    unsupported: number;
+    held: number;
+    retry: number;
+    unavailable: number;
+  };
   imported: number;
   discovered: number;
   pending: number;
@@ -60,7 +68,7 @@ export const label = (value: unknown): string =>
       : "";
 export type Track = ArchiveFile & { url: string };
 export function tracksFor(id: string, files: ArchiveFile[]): Track[] {
-  const formats = ["mp3", "m4a", "ogg", "flac", "wav"];
+  const formats = ["mp3", "m4a", "ogg", "flac", "wav", "mp4"];
   const groups = new Map<string, ArchiveFile>();
   const root = (file: ArchiveFile): string => {
     const original =

@@ -91,6 +91,27 @@ export default function App() {
     return () => controller.abort();
   }, [search]);
   useEffect(() => {
+    const controller = new AbortController();
+    const timer = window.setInterval(() => {
+      if (document.hidden) return;
+      getJSON<ImportStatus>(
+        "/api/source-catalog/v1/status?collection=etree",
+        controller.signal,
+      )
+        .then((status) => {
+          if (!controller.signal.aborted)
+            setCatalog((current) => current && { ...current, status });
+        })
+        .catch(() => {
+          /* The next poll retries; browsing remains available. */
+        });
+    }, 30_000);
+    return () => {
+      window.clearInterval(timer);
+      controller.abort();
+    };
+  }, []);
+  useEffect(() => {
     if (!selected) return;
     const controller = new AbortController();
     getJSON<Detail>(
@@ -345,6 +366,8 @@ export default function App() {
               {catalog.status.discovery_complete
                 ? " · Collection discovery complete"
                 : " · Collection discovery incomplete"}
+              {catalog.status.playback &&
+                ` · ${catalog.status.playback.reviewed.toLocaleString()} approved for streaming · ${catalog.status.playback.pending.toLocaleString()} awaiting playback review · ${catalog.status.playback.unsupported.toLocaleString()} unsupported · ${catalog.status.playback.held.toLocaleString()} held for operator review · ${catalog.status.playback.retry.toLocaleString()} review retries`}
               . Audio streams from Internet Archive.
               {catalog.status.last_error &&
                 ` Import paused: ${catalog.status.last_error}`}

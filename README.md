@@ -14,6 +14,13 @@ been selected; the current interface is a functional scaffold.
 
 ## Shared releases
 
+The full-import playback workflow on this feature branch requires core 0.4.1
+and viewer 0.4.3 from
+[Arkhiv PR 129](https://git.subcult.tv/subculture-collective/arkhiv/pulls/129).
+Until those artifacts are published and their pins adopted here, use the shared
+development override for the reviewer. The retained published pins below support
+metadata import; viewer 0.4.2 does not support nested audio source paths.
+
 The published viewer pin is 0.4.2 and the engine receipt pins core 0.4.0, including
 the source metadata catalog from
 [Arkhiv PR 126](https://git.subcult.tv/subculture-collective/arkhiv/pulls/126).
@@ -73,9 +80,11 @@ kit validates resolved URLs and manages audio state, volume and completion; this
 frontend owns track selection and layout. Source failures remain visible and may
 be retried manually. Playback is track-based; gapless playback is unverified.
 
-Nested source file paths remain in metadata but are unsupported by the engine's
-current representation file contract. Records with those paths, missing files or
-unreviewed playback remain searchable. Scheduled radio and calendar views have
+Safe nested audio paths are supported by the shared engine and kit updates.
+MPEG4 concert recordings can supply an audio-playback fallback when audio-only
+files are absent. Restricted, missing or unsupported files remain searchable;
+approvals describe source permissions rather than guaranteed CDN availability
+or browser codec decoding. Scheduled radio and calendar views have
 not been added to this frontend.
 
 `COLLECTION_POLICY=source_stream` is the default. Local preservation requires
@@ -84,6 +93,31 @@ Arkhiv manifest, integrity and recovery workflow. The metadata worker is identic
 in both modes. Existing collection policy cannot be switched implicitly.
 
 ## Operator commands
+
+The metadata worker resumes cursor discovery and imports 100 records per bounded
+run, with a one-second request delay and provider backoff. It pauses below a
+20 GiB free-space reserve on its storage filesystem. Keep the database on durable
+storage and monitor its size; a complete import can take several days. Worker
+logs are rotated. Source bytes and all unknown file entries remain in PostgreSQL.
+
+For continuous private playback coverage, set `PLAYBACK_REVIEW_NOTES` in `.env`
+to record the owner's approval, then enable the independent reviewer:
+
+```bash
+docker compose --env-file .env --env-file deploy/archive-core.env \
+  --profile playback up --build -d
+```
+
+The reviewer approves supported public source files in batches of 100, without
+fetching media. It skips completed snapshots and records unsupported, held and
+retryable outcomes. It cannot overwrite a separate operator approval or revocation.
+Changed snapshots require a new bound review; only an unchanged batch-owned
+decision can be renewed automatically. The UI refreshes import and playback
+approval counts every 30 seconds while visible. This grants no public publication,
+downloads, acquisition, relay or scheduling permission.
+
+Stop the `metadata-worker` or `playback-reviewer` service to pause its work;
+restarting resumes from PostgreSQL. Do not reset the database to restart discovery.
 
 Put saved metadata, corrections or manifests under `IMPORT_ROOT`. The operator
 profile mounts those inputs at `/imports`. During development, include the same
