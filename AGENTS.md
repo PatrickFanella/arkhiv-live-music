@@ -24,9 +24,11 @@ normal development. `docker-compose.core-dev.yml` optionally builds the actual
 core from a canonical Arkhiv checkout for shared-engine changes. The frontend
 and dependency checks require compatible module versions.
 
-The frontend owns its composition and future design system. Its current styling
-is a functional scaffold; no final visual system has been selected. Use the kit
-for shared behavior rather than copying its hooks or controls.
+The frontend owns its composition and design. The product is Lineage and its
+J-Card design system is documented in `docs/reference/brand.md` (ADR 0002). Use
+its tokens in `web/src/styles.css` and copy constants in `web/src/brand.ts`
+rather than literal colors or strings. Use the kit for shared behavior rather
+than copying its hooks or controls.
 
 ## Priorities
 

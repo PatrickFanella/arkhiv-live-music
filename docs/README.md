@@ -5,7 +5,7 @@ This directory is the current project knowledge base.
 ## Sections
 
 - `adr/` — architecture decision records
-- `reference/` — stable technical references
+- `reference/` — stable technical references, including the [Lineage brand and design system](reference/brand.md)
 - `research/` — exploratory notes, comparisons, and findings
 - `runbooks/` — repeatable operational procedures
 - `labels.md` — Open Pilot label lifecycle
