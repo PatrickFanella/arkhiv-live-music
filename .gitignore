@@ -78,3 +78,5 @@ postgres-data/
 
 # Keep generated lockfiles only when a derived template intentionally owns them.
 # Remove ignore rules above as needed for application repositories.
+
+web/dist-ssr/
