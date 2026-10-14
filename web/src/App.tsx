@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { getJSON, label, tracksFor } from "./archive";
 import type { Detail, Recording, Track, ImportStatus, Facets } from "./archive";
+import { brand } from "./brand";
 
 type Catalog = {
   items: Recording[];
@@ -222,28 +223,27 @@ export default function App() {
   };
   return (
     <div className="app-shell">
-      <header>
+      <div className="stripes" aria-hidden="true" />
+      <header className="masthead">
         <a className="wordmark" href="/">
-          arkhiv<span> / live music</span>
+          <strong>{brand.name}</strong>
+          <span>{brand.descriptor}</span>
         </a>
-        <a
-          href="https://archive.org/details/etree"
-          target="_blank"
-          rel="noreferrer"
-        >
-          From the Live Music Archive ↗
+        <a href={brand.collectionURL} target="_blank" rel="noreferrer">
+          Source: {brand.collectionName} ↗
         </a>
       </header>
       <main>
         <div className="intro">
-          <p className="eyebrow">CATALOG PREVIEW</p>
-          <h1>Live Music Archive</h1>
+          <p className="eyebrow">Catalog preview · built on Arkhiv</p>
+          <h1>{brand.tagline}</h1>
           <p>
-            A room, a night, a recording. Explore live shows from artists across
-            the Internet Archive’s Live Music Archive.
+            A room, a night, a recording. Search live shows from the Internet
+            Archive’s Live Music Archive by artist, venue and date. Source
+            metadata, corrections and taper lineage stay visible.
           </p>
         </div>
-        <section aria-label="Recording catalog">
+        <section aria-label="Recording catalog" className="search-card">
           <form onSubmit={submit} className="search-bar">
             <label>
               Search the catalog
@@ -266,7 +266,9 @@ export default function App() {
                 maxLength={4}
               />
             </label>
-            <button type="submit">Find shows ↗</button>
+            <button type="submit" className="primary">
+              Find shows ↗
+            </button>
           </form>
           <datalist id="catalog-years">
             {facets?.years.map((f) => (
@@ -368,11 +370,13 @@ export default function App() {
                 : " · Collection discovery incomplete"}
               {catalog.status.playback &&
                 ` · ${catalog.status.playback.reviewed.toLocaleString()} approved for streaming · ${catalog.status.playback.pending.toLocaleString()} awaiting playback review · ${catalog.status.playback.unsupported.toLocaleString()} unsupported · ${catalog.status.playback.held.toLocaleString()} held for operator review · ${catalog.status.playback.retry.toLocaleString()} review retries`}
-              . Audio streams from Internet Archive.
+              . Audio streams from the Internet Archive.
               {catalog.status.last_error &&
                 ` Import paused: ${catalog.status.last_error}`}
             </p>
           )}
+        </section>
+        <section aria-label="Recording list">
           <div className="catalog-heading">
             <h2>
               {search.q ? `Results for “${search.q}”` : "Browse the tape shelf"}
@@ -461,7 +465,10 @@ export default function App() {
           )}
         </section>
         <footer>
-          Recorded by the community. Preserved by Internet Archive.
+          <span>
+            {brand.name} is built on Arkhiv. Recorded by tapers, preserved by
+            the Internet Archive.
+          </span>
           <span>Availability and playback depend on the source recording.</span>
         </footer>
       </main>
@@ -482,7 +489,7 @@ export default function App() {
             >
               Close ×
             </button>
-            <p className="eyebrow">RECORDING LABEL</p>
+            <p className="eyebrow">Recording label</p>
             {!detail && !detailError && <p role="status">Loading recording…</p>}
             {detailError && (
               <div role="alert">
@@ -501,9 +508,11 @@ export default function App() {
               <>
                 <h2>{label(detail.metadata.creator) || "Unknown artist"}</h2>
                 <p className="detail-title">{label(detail.metadata.title)}</p>
-                <p className="recording-notes">
-                  {label(detail.metadata.description)}
-                </p>
+                {label(detail.metadata.description) && (
+                  <p className="recording-notes">
+                    {label(detail.metadata.description)}
+                  </p>
+                )}
                 {detail.unavailable && (
                   <p role="status" className="notice">
                     This source was unavailable at the last import. Its catalog
@@ -591,7 +600,11 @@ export default function App() {
                 <div className="track-heading">
                   <h3>{tracks.length} playable tracks</h3>
                   {tracks.length > 0 && (
-                    <button disabled={resolving} onClick={() => play(0)}>
+                    <button
+                      className="primary"
+                      disabled={resolving}
+                      onClick={() => play(0)}
+                    >
                       Play recording ▶
                     </button>
                   )}
@@ -606,12 +619,16 @@ export default function App() {
                   {tracks.map((track, index) => (
                     <li key={track.name}>
                       <button onClick={() => play(index)}>
-                        <span>{String(index + 1).padStart(2, "0")}</span>
+                        <span className="track-index">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
                         <strong>
                           {label(track.title) ||
                             track.name.replace(/\.[^.]+$/, "")}
                         </strong>
-                        <span>{track.length || "▶"}</span>
+                        <span className="track-length">
+                          {track.length || "▶"}
+                        </span>
                       </button>
                     </li>
                   ))}
@@ -625,7 +642,7 @@ export default function App() {
         <aside className="player" aria-label="Audio player">
           <div>
             <p className="eyebrow">
-              NOW PLAYING · {label(playing.recording.metadata.creator)}
+              Now playing · {label(playing.recording.metadata.creator)}
             </p>
             <strong>{label(current.title) || current.name}</strong>
             <p>

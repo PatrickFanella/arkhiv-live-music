@@ -2,6 +2,7 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import App from "./App";
 import { tracksFor } from "./archive";
+import { brand } from "./brand";
 
 describe("Live Music Archive", () => {
   it("uses concert MPEG4 audio only when preferred audio derivatives are absent", () => {
@@ -20,6 +21,14 @@ describe("Live Music Archive", () => {
     const html = renderToString(<App />);
     expect(html).toContain("Search the catalog");
     expect(html).toContain("Loading recordings from the catalog");
+  });
+  it("renders the Lineage brand and design-system shell", () => {
+    const html = renderToString(<App />);
+    expect(html).toContain(">Lineage<");
+    expect(html).toContain(brand.tagline);
+    expect(html).toContain('class="stripes"');
+    expect(html).toContain('class="masthead"');
+    expect(html).not.toContain("arkhiv<span>");
   });
   it("groups derivative formats, skips private files and orders tracks naturally", () => {
     const tracks = tracksFor("show", [

@@ -1,6 +1,6 @@
-# Arkhiv Live Music
+# Lineage
 
-A Live Music Archive consumer with a shared Arkhiv backend and an independent
+Live recordings, with their lineage. A Live Music Archive consumer with a shared Arkhiv backend and an independent
 React frontend built with `@subcult/archive-viewer`. Metadata always lives in
 Arkhiv's PostgreSQL database. Audio may stream from the source or be preserved
 through Arkhiv's separate reviewed acquisition workflow.
@@ -9,8 +9,9 @@ This repository owns frontend composition, configuration and dependency pins.
 It owns no backend fork, metadata importer or database schema. Backend fixes and
 features are implemented in [Arkhiv](https://git.subcult.tv/subculture-collective/arkhiv)
 and reach this app through the same release-upgrade workflow as its siblings.
-Viewer and engine upgrades remain separate. The visual design system has not
-been selected; the current interface is a functional scaffold.
+Viewer and engine upgrades remain separate. The product is named Lineage and
+uses the J-Card design system described in `docs/reference/brand.md`; the
+repository, package and Compose project keep the `arkhiv-live-music` name.
 
 ## Shared releases
 
