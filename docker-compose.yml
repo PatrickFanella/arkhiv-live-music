@@ -49,6 +49,8 @@ services:
 
   metadata-worker:
     image: ${ARCHIVE_ENGINE_IMAGE:?Load deploy/archive-core.env}
+    # CLI workers do not serve the image's API readiness endpoint.
+    healthcheck: {disable: true}
     entrypoint: [/bin/sh, -c]
     command:
       - >-
@@ -67,6 +69,7 @@ services:
   playback-reviewer:
     profiles: [playback]
     image: ${ARCHIVE_ENGINE_IMAGE:?Load deploy/archive-core.env}
+    healthcheck: {disable: true}
     entrypoint: [/bin/sh, -c]
     command:
       - >-
