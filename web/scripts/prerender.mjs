@@ -1,0 +1,11 @@
+import { readFile, writeFile } from "node:fs/promises";
+import { URL } from "node:url";
+import { log } from "node:console";
+import { render } from "../dist-ssr/entry-prerender.js";
+const path = new URL("../dist/index.html", import.meta.url);
+const template = await readFile(path, "utf8");
+const body = render();
+if (!body.includes("<h1") || !body.includes("<main")) throw new Error("Public introduction did not render");
+if (!template.includes('<div id="root"></div>')) throw new Error("Missing root placeholder");
+await writeFile(path, template.replace('<div id="root"></div>', `<div id="root">${body}</div>`));
+log("Rendered Lineage's public introduction without catalog or playback requests");
