@@ -65,7 +65,15 @@ restores the source value. No set boundaries or source classification are guesse
 
 The local index searches artists, titles, venues, places, source credits, notes,
 lineage, subjects and track titles. Filters include year, artist, venue, date range
-and source availability. Cursor discovery covers the full collection beyond the
+and source availability. The frontend offers counted artist, venue and year
+suggestion directories, decade shortcuts, removable applied filters, shareable
+search URLs and browser back/forward navigation. Recording details link to related
+artists, venues, dates and place searches. Directories reflect the service's limited
+facet suggestions, not an exhaustive artist or venue inventory. Tour mentions,
+places, songs and credits use the metadata text search; tours are not structured
+entities. No map or geocoding is included.
+
+Cursor discovery covers the full collection beyond the
 Archive search result ceiling. Browsing and details use the database without
 contacting the provider. Refresh/reconciliation is an explicit operator command.
 
@@ -87,6 +95,24 @@ not been added to this frontend.
 explicit initial collection policy, byte budget and reserve, then the existing
 Arkhiv manifest, integrity and recovery workflow. The metadata worker is identical
 in both modes. Existing collection policy cannot be switched implicitly.
+
+## Artwork and artist images
+
+Recording details and the player select public cover art or photographs from the
+retained file inventory. Named cover art takes priority. Private files, automatic
+item thumbnails, spectrograms and recognizable waveform derivatives are excluded.
+Artwork loads directly from Internet Archive; missing or failed images fall back
+to a curated artist image, then a placeholder. The catalog rows and artist directory
+use artist images without fetching a separate recording detail for each row.
+
+`web/src/artist-images.ts` holds curated image references separately from source
+metadata. The starter registry includes Ween and Billy Strings photographs and
+Phil Lesh and Grateful Dead logos. Each entry records its exact artist name,
+confirmed aliases, image type, source, credit, rights note and verification date.
+Inspect an image and its source before adding an entry; do not match artists by
+substring or treat an artist photo as a recording cover. Source links appear on
+the detail image. This registry does not establish a reuse license for the images.
+No image binaries or audio are stored in this repository.
 
 ## Operator commands
 
