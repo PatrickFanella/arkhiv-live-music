@@ -69,7 +69,8 @@ tracking, maximum 14 characters per line. Labels: 0.72rem, uppercase,
   rule above the filter disclosure. The disclosure opens when a filter it
   holds is applied. Outside the home view the card is compact.
 - **Collection directory:** separate `paper-raised` disclosure below the
-  search card, open on the unfiltered home view only.
+  search card, open on the unfiltered home view only. It previews 12
+  suggestions, or 6 at the 480px single-column breakpoint.
 - **Tape shelf:** heading with monospace count and share link, removable
   filter chips below, then a 2px ink rule, hairline rows, red monospace
   counter, monospace date on the right, arrow nudges on hover. On small

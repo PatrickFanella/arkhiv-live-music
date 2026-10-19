@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Artwork from "./Artwork";
 import { artistImageFor } from "./artist-images";
 import type { Facets } from "./archive";
@@ -10,6 +10,22 @@ const dimensions = {
   venues: { label: "Venues", key: "venue" },
   years: { label: "Years", key: "year" },
 } as const;
+// Single-column phone layouts preview fewer suggestions; keep in step with the
+// 480px breakpoint in styles.css.
+const narrowQuery = "(max-width: 480px)";
+function subscribeNarrow(onChange: () => void) {
+  if (typeof window === "undefined" || !window.matchMedia) return () => {};
+  const query = window.matchMedia(narrowQuery);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+function useNarrow() {
+  return useSyncExternalStore(
+    subscribeNarrow,
+    () => window.matchMedia?.(narrowQuery).matches ?? false,
+    () => false,
+  );
+}
 export default function BrowseDirectory({
   open = true,
   facets,
@@ -27,6 +43,7 @@ export default function BrowseDirectory({
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("count");
   const [expanded, setExpanded] = useState(false);
+  const preview = useNarrow() ? 6 : 12;
   const entries = [...(facets?.[dimension] || [])]
     .filter((entry) =>
       entry.value
@@ -40,7 +57,7 @@ export default function BrowseDirectory({
           ? b.value.localeCompare(a.value)
           : a.value.localeCompare(b.value),
     );
-  const visible = expanded ? entries : entries.slice(0, 12);
+  const visible = expanded ? entries : entries.slice(0, preview);
   return (
     <details className="browse-directory" open={open || undefined}>
       <summary>
@@ -150,7 +167,7 @@ export default function BrowseDirectory({
               Suggestions are limited by the catalog service; use the filters
               for values not listed here.
             </small>
-            {entries.length > 12 && (
+            {entries.length > preview && (
               <button type="button" onClick={() => setExpanded(!expanded)}>
                 {expanded ? "Show fewer" : "Show all suggestions"}
               </button>
