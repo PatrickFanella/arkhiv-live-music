@@ -37,12 +37,12 @@ Enrichment does not overwrite source recording metadata or editorial corrections
 
 ## Compatibility and review
 
-The consumer keeps its published core/viewer pins. The new views check
+The consumer adopts published core 0.4.2 and retains viewer 0.4.3. The new views check
 `source_discovery` capability and show an update notice on older cores, instead
 of sending filters an old engine might ignore. Normal browsing remains usable.
-Use the development-core Compose override with the canonical Arkhiv feature
-checkout to qualify both sides. A published core release, matching receipt and
-reviewed consumer adoption are required before deploying these views normally.
+Use the development-core Compose override with the canonical Arkhiv checkout
+to qualify shared changes. Every engine upgrade needs its published immutable
+digest, matching receipt and reviewed consumer adoption before deployment.
 
 Verification: consumer `make verify`; shared-engine `make verify` with a
 disposable PostgreSQL database; provider-helper fixture tests; browser checks of

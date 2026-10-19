@@ -18,8 +18,8 @@ normalization provenance and editorial corrections remain independent. Re-import
 must preserve corrections. Media acquisition is a separate operator workflow;
 metadata workers never fetch audio. Playback uses engine-resolved, reviewed files.
 
-Core 0.4.1 supplies source-catalog module 1, batch playback reviews and nested
-source audio. Viewer 0.4.3 validates the resulting URLs. Use the pinned engine for
+Core 0.4.2 supplies source-catalog module 1, source-discovery module 1, batch
+playback reviews and nested source audio. Viewer 0.4.3 validates the resulting URLs. Use the pinned engine for
 normal development. `docker-compose.core-dev.yml` optionally builds the actual
 core from a canonical Arkhiv checkout for shared-engine changes. The frontend
 and dependency checks require compatible module versions.
@@ -53,7 +53,6 @@ only after reviewing scope and verification, or use the reviewed ready-for-picku
 form. Treat `ready-for-agent` alone and assignment to `open-pilot` as pickup approval
 when enabled. `make typecheck` does not emit application files.
 
-Artist/date discovery is an optional `source_discovery` module-1 capability until
-its reviewed core release is adopted. Preserve the published pins and capability
-guard. Artist enrichment sources stay independent of recording metadata, and all
+Artist/date discovery requires the adopted `source_discovery` module-1 capability.
+Preserve the published pins and the runtime capability guard. Artist enrichment sources stay independent of recording metadata, and all
 date/artist views must honor source-catalog exclusions.

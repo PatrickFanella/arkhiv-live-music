@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://lineage.subcult.tv/sitemap.xml
+Sitemap: https://headcount.subcult.tv/sitemap.xml

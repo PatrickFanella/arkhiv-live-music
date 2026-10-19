@@ -15,14 +15,14 @@ repository, package and Compose project keep the `arkhiv-live-music` name.
 
 ## Shared releases
 
-The published viewer pin is 0.4.3 and the engine receipt pins core 0.4.1, including
+The published viewer pin is 0.4.3 and the engine receipt pins core 0.4.2, including
 the source metadata catalog, batch playback reviews and nested audio support from
 [Arkhiv PR 129](https://git.subcult.tv/subculture-collective/arkhiv/pulls/129).
 The engine image uses an immutable registry digest. The viewer retains its
-core 0.3.0 API compatibility receipt; core 0.4.1 preserves those API contracts
+core 0.3.0 API compatibility receipt; core 0.4.2 preserves those API contracts
 and migration checksums.
 
-The frontend requires `source_catalog` module 1 and checks `/api/version` before
+The frontend requires `source_catalog` and `source_discovery` module 1 and checks `/api/version` before
 loading its catalog. `make verify` validates code, configuration and pin provenance;
 it rejects engine receipts that lack the required modules.
 
@@ -192,8 +192,14 @@ MusicBrainz/Wikipedia information and photographs. The historical concert calend
 supports one year, a year range, or all years. On this day lists a chosen month/day
 across years. Dates and filters are shareable through the existing root URL.
 
-These views require Arkhiv `source_discovery` module 1. Published core 0.4.1 does
-not provide it; normal browsing remains available and the new views report the
-missing capability. See [feature behavior and qualification](docs/reference/artist-and-date-discovery.md)
-before release/adoption. Provider matching and fetching belong to the engine's
+These views use Arkhiv `source_discovery` module 1, supplied by the pinned core
+0.4.2 release. The capability guard still reports an outdated runtime rather than
+letting it silently ignore date filters. See [feature behavior and qualification](docs/reference/artist-and-date-discovery.md)
+for behavior and verification. Provider matching and fetching belong to the engine's
 operator workflow, with no provider requests during public page reads.
+
+## Public address
+
+The public address is https://headcount.subcult.tv/. The Lineage product name and
+J-Card interface remain the same. Canonical metadata, Open Graph URL, sitemap and
+robots discovery use this address; the existing Lineage hostname remains an alias.
