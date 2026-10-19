@@ -5,6 +5,8 @@ import Artwork from "./Artwork";
 import { artistImageFor } from "./artist-images";
 import { recordingArtwork } from "./artwork";
 import BrowseDirectory from "./BrowseDirectory";
+import ArtistPage from "./ArtistPage";
+import DateDiscovery from "./DateDiscovery";
 import {
   emptySearch,
   filterLabels,
@@ -13,11 +15,11 @@ import {
   validateDates,
 } from "./browse";
 import type { FilterKey, Search } from "./browse";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { getJSON, label, tracksFor } from "./archive";
 import type { Detail, Recording, Track, ImportStatus, Facets } from "./archive";
-import { brand } from "./brand";
+import { brand, discoveryCopy } from "./brand";
 
 type Catalog = {
   items: Recording[];
@@ -29,6 +31,7 @@ export default function App() {
   const [search, setSearch] = useState<Search>(() =>
     readSearch(typeof window === "undefined" ? "" : window.location.search),
   );
+  const [supportsDiscovery, setSupportsDiscovery] = useState<boolean>();
   const [draft, setDraft] = useState<Search>(search);
   const [facets, setFacets] = useState<Facets>();
   const [facetError, setFacetError] = useState("");
@@ -83,6 +86,19 @@ export default function App() {
       modules: Record<string, string>;
     }>("/api/version", controller.signal)
       .then((version) => {
+        const available = version.modules.source_discovery === "1";
+        setSupportsDiscovery(available);
+        if (
+          !available &&
+          (search.month_day ||
+            search.year_from ||
+            search.year_to ||
+            search.month ||
+            search.sort ||
+            search.view === "calendar" ||
+            search.view === "on-this-day")
+        )
+          throw new Error(discoveryCopy.updateRequired);
         if (
           version.api_version !== "1" ||
           version.modules.source_catalog !== "1"
@@ -179,6 +195,10 @@ export default function App() {
       );
   };
   const applyFilters = (filters: Partial<Search>) => {
+    if (filters.month_day === "" && search.view === "on-this-day")
+      filters = { ...filters, view: "", sort: "" };
+    if (filters.year_from === "" || filters.year_to === "")
+      filters = { ...filters, year_from: "", year_to: "" };
     setHistory([]);
     changeSearch({ ...search, ...filters, cursor: "" });
   };
@@ -206,7 +226,11 @@ export default function App() {
     setResolving(false);
     setSelected("");
     setHistory([]);
-    changeSearch({ ...emptySearch, ...filters });
+    changeSearch({
+      ...emptySearch,
+      ...filters,
+      view: filters.artist ? "artist" : "",
+    });
   };
   const open = (id: string) => {
     setDetail(undefined);
@@ -290,15 +314,93 @@ export default function App() {
         </a>
       </header>
       <main>
-        <div className="intro">
-          <p className="eyebrow">Catalog preview · built on Arkhiv</p>
-          <h1>{brand.tagline}</h1>
-          <p>
-            A room, a night, a recording. Search live shows from the Internet
-            Archive’s Live Music Archive by artist, venue and date. Source
-            metadata, corrections and taper lineage stay visible.
-          </p>
-        </div>
+        <nav className="discovery-nav" aria-label="Explore recordings">
+          <button
+            aria-current={
+              !search.view || search.view === "artist" ? "page" : undefined
+            }
+            onClick={() => {
+              setHistory([]);
+              changeSearch({ ...emptySearch });
+            }}
+          >
+            {discoveryCopy.browse}
+          </button>
+          <button
+            aria-current={search.view === "calendar" ? "page" : undefined}
+            onClick={() => {
+              const now = new Date();
+              setHistory([]);
+              changeSearch({
+                ...emptySearch,
+                artist: search.artist,
+                view: "calendar",
+                month: String(now.getMonth() + 1).padStart(2, "0"),
+                year_from: String(now.getFullYear()),
+                year_to: String(now.getFullYear()),
+                sort: "date_desc",
+              });
+            }}
+          >
+            {discoveryCopy.calendar}
+          </button>
+          <button
+            aria-current={search.view === "on-this-day" ? "page" : undefined}
+            onClick={() => {
+              const now = new Date();
+              setHistory([]);
+              changeSearch({
+                ...emptySearch,
+                artist: search.artist,
+                view: "on-this-day",
+                month_day: `${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`,
+                sort: "date_desc",
+              });
+            }}
+          >
+            {discoveryCopy.onThisDay}
+          </button>
+        </nav>
+        {search.artist &&
+          search.view !== "calendar" &&
+          search.view !== "on-this-day" && (
+            <ArtistPage
+              key={search.artist}
+              artist={search.artist}
+              available={supportsDiscovery}
+            />
+          )}
+        {(search.view === "calendar" || search.view === "on-this-day") && (
+          <DateDiscovery
+            search={search}
+            available={supportsDiscovery}
+            change={(filters) => {
+              setHistory([]);
+              changeSearch({
+                ...emptySearch,
+                artist: search.artist,
+                view: search.view,
+                month: search.month,
+                month_day: search.month_day,
+                year_from: search.year_from,
+                year_to: search.year_to,
+                sort: "date_desc",
+                ...filters,
+              });
+            }}
+          />
+        )}
+        {!search.artist && !search.view && (
+          <div className="intro">
+            <p className="eyebrow">Catalog preview · built on Arkhiv</p>
+            <h1>{brand.tagline}</h1>
+            <p>
+              A room, a night, a recording. Search live shows from the Internet
+              Archive’s Live Music Archive by artist, venue and date. Source
+              metadata, corrections and taper lineage stay visible.
+            </p>
+          </div>
+        )}
         <section aria-label="Recording catalog" className="search-card">
           <BrowseDirectory
             facets={facets}
@@ -307,7 +409,12 @@ export default function App() {
               setFacetError("");
               setFacetRetry(facetRetry + 1);
             }}
-            select={applyFilters}
+            select={(filters) => {
+              if (filters.artist) {
+                setHistory([]);
+                changeSearch({ ...emptySearch, ...filters, view: "artist" });
+              } else applyFilters(filters);
+            }}
           />
           <form onSubmit={submit} className="catalog-filters">
             <div className="search-bar">
@@ -465,13 +572,19 @@ export default function App() {
         <section aria-label="Recording list">
           <div className="catalog-heading" ref={results}>
             <h2>
-              {search.q
-                ? `Results for “${search.q}”`
-                : Object.keys(filterLabels).some(
-                      (key) => search[key as FilterKey],
-                    )
-                  ? "Filtered recordings"
-                  : "Browse the tape shelf"}
+              {search.view === "on-this-day"
+                ? discoveryCopy.onThisDay
+                : search.view === "calendar"
+                  ? discoveryCopy.dateRecordings
+                  : search.artist
+                    ? `${search.artist} recordings`
+                    : search.q
+                      ? `Results for “${search.q}”`
+                      : Object.keys(filterLabels).some(
+                            (key) => search[key as FilterKey],
+                          )
+                        ? "Filtered recordings"
+                        : "Browse the tape shelf"}
             </h2>
             <span>
               {catalog
@@ -503,39 +616,49 @@ export default function App() {
           )}
           <div className="tape-list">
             {catalog?.items.map((recording, index) => (
-              <button
-                className="tape"
-                key={recording.identifier}
-                onClick={() => open(recording.identifier)}
-              >
-                <span className="tape-number">
-                  {String(history.length * 100 + index + 1).padStart(3, "0")}
-                </span>
-                <Artwork
-                  artist={artistImageFor(recording.creator)}
-                  name={label(recording.creator)}
-                />
-                <span className="tape-info">
-                  <strong>
-                    {label(recording.creator) || "Unknown artist"}
-                  </strong>
-                  <span>
-                    {label(recording.title) || recording.identifier}
-                    {recording.unavailable ? " · Source unavailable" : ""}
+              <Fragment key={recording.identifier}>
+                {search.sort === "date_desc" &&
+                  (index === 0 ||
+                    label(catalog.items[index - 1].date).slice(0, 4) !==
+                      label(recording.date).slice(0, 4)) && (
+                    <h3 className="recording-year">
+                      {label(recording.date).slice(0, 4)}
+                    </h3>
+                  )}
+                <button
+                  className="tape"
+                  key={recording.identifier}
+                  onClick={() => open(recording.identifier)}
+                >
+                  <span className="tape-number">
+                    {String(history.length * 100 + index + 1).padStart(3, "0")}
                   </span>
-                  <span className="tape-place">
-                    {[label(recording.venue), label(recording.coverage)]
-                      .filter(Boolean)
-                      .join(" · ") || "Venue and place not recorded"}
+                  <Artwork
+                    artist={artistImageFor(recording.creator)}
+                    name={label(recording.creator)}
+                  />
+                  <span className="tape-info">
+                    <strong>
+                      {label(recording.creator) || "Unknown artist"}
+                    </strong>
+                    <span>
+                      {label(recording.title) || recording.identifier}
+                      {recording.unavailable ? " · Source unavailable" : ""}
+                    </span>
+                    <span className="tape-place">
+                      {[label(recording.venue), label(recording.coverage)]
+                        .filter(Boolean)
+                        .join(" · ") || "Venue and place not recorded"}
+                    </span>
                   </span>
-                </span>
-                <span className="tape-date">
-                  {label(recording.date).slice(0, 10) || "Date unknown"}
-                </span>
-                <span aria-hidden="true" className="arrow">
-                  ↗
-                </span>
-              </button>
+                  <span className="tape-date">
+                    {label(recording.date).slice(0, 10) || "Date unknown"}
+                  </span>
+                  <span aria-hidden="true" className="arrow">
+                    ↗
+                  </span>
+                </button>
+              </Fragment>
             ))}
           </div>
           {catalog && (

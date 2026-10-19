@@ -109,3 +109,36 @@ export async function getJSON<T>(
 ): Promise<T> {
   return catalogRequest<T>(path, signal);
 }
+
+export type ArtistPhoto = {
+  url: string;
+  source: string;
+  credit: string;
+  license: string;
+  license_url: string;
+};
+export type ArtistProfile = {
+  artist: string;
+  recordings: number;
+  first_recording: string;
+  last_recording: string;
+  profile_updated_at?: string;
+  profile: null | {
+    name: string;
+    musicbrainz_id: string;
+    musicbrainz_url: string;
+    type?: string;
+    country?: string;
+    area?: { name: string };
+    "begin-area"?: { name: string };
+    "life-span"?: { begin?: string; end?: string; ended?: boolean };
+    biography?: { text: string; source: string; license: string };
+    photo?: ArtistPhoto;
+  };
+};
+export type ConcertCalendar = {
+  days: { date: string; recordings: number }[];
+  month: string;
+  year_from: string;
+  year_to: string;
+};

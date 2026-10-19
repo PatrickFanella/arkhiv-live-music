@@ -2,6 +2,9 @@
 
 This directory is the current project knowledge base.
 
+[Artist pages and historical date browsing](reference/artist-and-date-discovery.md)
+records feature behavior and shared-engine compatibility.
+
 ## Sections
 
 - `adr/` — architecture decision records
