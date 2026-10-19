@@ -30,6 +30,14 @@ describe("Live Music Archive", () => {
     expect(html).toContain('class="masthead"');
     expect(html).not.toContain("arkhiv<span>");
   });
+  it("links each discovery view from the masthead and marks the current one", () => {
+    const html = renderToString(<App />);
+    const nav = html.slice(html.indexOf('class="primary-nav"'));
+    expect(nav).toContain('href="/" aria-current="page"');
+    expect(nav).toContain("view=calendar");
+    expect(nav).toContain("view=on-this-day");
+    expect(html.indexOf("primary-nav")).toBeLessThan(html.indexOf("<main"));
+  });
   it("groups derivative formats, skips private files and orders tracks naturally", () => {
     const tracks = tracksFor("show", [
       { name: "track10.mp3", original: "track10.flac" },

@@ -11,11 +11,13 @@ const dimensions = {
   years: { label: "Years", key: "year" },
 } as const;
 export default function BrowseDirectory({
+  open = true,
   facets,
   error,
   retry,
   select,
 }: {
+  open?: boolean;
   facets?: Facets;
   error: string;
   retry: () => void;
@@ -40,28 +42,39 @@ export default function BrowseDirectory({
     );
   const visible = expanded ? entries : entries.slice(0, 12);
   return (
-    <details className="browse-directory" open>
-      <summary>Explore the collection</summary>
-      <p>
-        Choose an artist, a room, or a year to narrow your search. Counts
-        describe imported recordings.
-      </p>
+    <details className="browse-directory" open={open || undefined}>
+      <summary>
+        <span className="summary-title">Explore the collection</span>
+        <span className="summary-hint">
+          Choose an artist, a room, or a year to narrow your search. Counts
+          describe imported recordings.
+        </span>
+      </summary>
       <div className="browse-controls">
-        <div className="dimension-buttons" role="group" aria-label="Browse by">
-          {(Object.keys(dimensions) as Dimension[]).map((key) => (
-            <button
-              key={key}
-              type="button"
-              aria-pressed={dimension === key}
-              onClick={() => {
-                setDimension(key);
-                setQuery("");
-                setExpanded(false);
-              }}
-            >
-              {dimensions[key].label}
-            </button>
-          ))}
+        <div className="dimension-field">
+          <span className="field-label" id="browse-by">
+            Browse by
+          </span>
+          <div
+            className="dimension-buttons"
+            role="group"
+            aria-labelledby="browse-by"
+          >
+            {(Object.keys(dimensions) as Dimension[]).map((key) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={dimension === key}
+                onClick={() => {
+                  setDimension(key);
+                  setQuery("");
+                  setExpanded(false);
+                }}
+              >
+                {dimensions[key].label}
+              </button>
+            ))}
+          </div>
         </div>
         <label>
           Find {dimensions[dimension].label.toLowerCase()}
