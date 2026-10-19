@@ -59,12 +59,25 @@ tracking, maximum 14 characters per line. Labels: 0.72rem, uppercase,
 
 - **Stripes:** 6px three-color bar at the top of the page, the left edge of
   the recording panel and the top of the player. Do not use it elsewhere.
-- **Masthead:** wordmark left, source credit right, hairline below.
+- **Layout:** masthead, page and footer share one content column
+  (`min(1200px, 100% - 2 × gutter)`), so their left and right edges align.
+- **Masthead:** wordmark left, primary navigation (Browse recordings, Concert
+  calendar, On this day) as links beside it, source credit right, hairline
+  below. The current view is ink-filled. Below 900px the navigation moves to
+  its own row and scrolls sideways.
 - **Search card:** `paper-deep` surface, primary `Find shows` button, dashed
-  rule above the filter disclosure, monospace import status.
-- **Tape shelf:** 2px ink rule on top, hairline rows, red monospace counter,
-  monospace date on the right, arrow nudges on hover.
-- **Recording panel:** right-side dialog with the stripe on its left edge;
+  rule above the filter disclosure. The disclosure opens when a filter it
+  holds is applied. Outside the home view the card is compact.
+- **Collection directory:** separate `paper-raised` disclosure below the
+  search card, open on the unfiltered home view only.
+- **Tape shelf:** heading with monospace count and share link, removable
+  filter chips below, then a 2px ink rule, hairline rows, red monospace
+  counter, monospace date on the right, arrow nudges on hover. On small
+  screens the date moves under the place line.
+- **Footer:** credits left, monospace import status right. Zero counts are
+  omitted.
+- **Recording panel:** right-side dialog with the stripe on its left edge and
+  a sticky header holding the label and close button;
   definition list with uppercase monospace terms; track list with red
   monospace index and monospace length.
 - **Player:** fixed ink bar with stripe on top, outlined paper buttons.

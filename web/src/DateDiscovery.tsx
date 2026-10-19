@@ -215,7 +215,9 @@ function MonthGrid({
               onClick={() => choose(day)}
             >
               <strong>{day}</strong>
-              <span>{(counts.get(day) || 0).toLocaleString()}</span>
+              {counts.get(day) ? (
+                <span>{counts.get(day)!.toLocaleString()}</span>
+              ) : null}
             </button>
           ),
         )}
@@ -256,39 +258,46 @@ export default function DateDiscovery({
           ? `${monthNames[month - 1]} ${day}, through the years`
           : `${monthNames[month - 1]} recordings`}
       </h1>
-      <p>{onThisDay ? copy.todayHelp : copy.calendarHelp}</p>
-      <div className="date-controls">
-        <MonthPicker
-          month={month}
-          change={(next) =>
-            onThisDay
-              ? choose(Math.min(day, monthLength(next)), next)
-              : change({ month: String(next).padStart(2, "0"), month_day: "" })
+      <p className="date-help">
+        {onThisDay ? copy.todayHelp : copy.calendarHelp}
+      </p>
+      <div className="date-toolbar">
+        <div className="date-controls">
+          <MonthPicker
+            month={month}
+            change={(next) =>
+              onThisDay
+                ? choose(Math.min(day, monthLength(next)), next)
+                : change({
+                    month: String(next).padStart(2, "0"),
+                    month_day: "",
+                  })
+            }
+          />
+          {onThisDay && (
+            <label>
+              {copy.day}
+              <select
+                value={day}
+                onChange={(event) => choose(Number(event.target.value))}
+              >
+                {Array.from({ length: monthLength(month) }, (_, index) => (
+                  <option key={index} value={index + 1}>
+                    {index + 1}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+        <YearPicker
+          key={`${search.year_from}-${search.year_to}`}
+          search={search}
+          change={(filters) =>
+            change({ ...filters, ...(!onThisDay ? { month_day: "" } : {}) })
           }
         />
-        {onThisDay && (
-          <label>
-            {copy.day}
-            <select
-              value={day}
-              onChange={(event) => choose(Number(event.target.value))}
-            >
-              {Array.from({ length: monthLength(month) }, (_, index) => (
-                <option key={index} value={index + 1}>
-                  {index + 1}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
       </div>
-      <YearPicker
-        key={`${search.year_from}-${search.year_to}`}
-        search={search}
-        change={(filters) =>
-          change({ ...filters, ...(!onThisDay ? { month_day: "" } : {}) })
-        }
-      />
       {available === false ? (
         <p className="notice">{copy.updateRequired}</p>
       ) : (
@@ -302,7 +311,10 @@ export default function DateDiscovery({
         )
       )}
       {search.month_day && !onThisDay && (
-        <button onClick={() => change({ month_day: "" })}>
+        <button
+          className="whole-month"
+          onClick={() => change({ month_day: "" })}
+        >
           {copy.wholeMonth}
         </button>
       )}

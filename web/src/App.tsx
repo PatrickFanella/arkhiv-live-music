@@ -16,7 +16,7 @@ import {
 } from "./browse";
 import type { FilterKey, Search } from "./browse";
 import { Fragment, useEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, MouseEvent } from "react";
 import { getJSON, label, tracksFor } from "./archive";
 import type { Detail, Recording, Track, ImportStatus, Facets } from "./archive";
 import { brand, discoveryCopy } from "./brand";
@@ -301,66 +301,96 @@ export default function App() {
         playing.identifier,
       );
   };
+  const pad = (value: number) => String(value).padStart(2, "0");
+  const now = new Date();
+  const destinations = {
+    browse: { ...emptySearch },
+    calendar: {
+      ...emptySearch,
+      artist: search.artist,
+      view: "calendar",
+      month: pad(now.getMonth() + 1),
+      year_from: String(now.getFullYear()),
+      year_to: String(now.getFullYear()),
+      sort: "date_desc",
+    },
+    "on-this-day": {
+      ...emptySearch,
+      artist: search.artist,
+      view: "on-this-day",
+      month_day: `${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+      sort: "date_desc",
+    },
+  } satisfies Record<string, Search>;
+  const activeView =
+    search.view === "calendar" || search.view === "on-this-day"
+      ? search.view
+      : "browse";
+  const navigate = (next: Search) => (event: MouseEvent) => {
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
+    event.preventDefault();
+    setHistory([]);
+    changeSearch(next);
+  };
+  const appliedFilters = (Object.keys(filterLabels) as FilterKey[]).filter(
+    (key) => search[key],
+  );
+  const refining =
+    (["venue", "year", "date_from", "date_to", "availability"] as const).some(
+      (key) => search[key],
+    ) ||
+    (!!search.artist && !search.view);
+  const home = !search.view && appliedFilters.length === 0;
+  const status = catalog?.status;
   return (
-    <div className="app-shell">
+    <div className={`app-shell${playing ? " has-player" : ""}`}>
       <div className="stripes" aria-hidden="true" />
       <header className="masthead">
-        <a className="wordmark" href="/">
-          <strong>{brand.name}</strong>
-          <span>{brand.descriptor}</span>
-        </a>
-        <a href={brand.collectionURL} target="_blank" rel="noreferrer">
-          Source: {brand.collectionName} ↗
-        </a>
+        <div className="masthead-inner">
+          <a
+            className="wordmark"
+            href="/"
+            onClick={navigate(destinations.browse)}
+          >
+            <strong>{brand.name}</strong>
+            <span>{brand.descriptor}</span>
+          </a>
+          <nav className="primary-nav" aria-label="Explore recordings">
+            {(
+              [
+                ["browse", discoveryCopy.browse],
+                ["calendar", discoveryCopy.calendar],
+                ["on-this-day", discoveryCopy.onThisDay],
+              ] as const
+            ).map(([key, text]) => (
+              <a
+                key={key}
+                href={`/${searchQuery(destinations[key]) ? `?${searchQuery(destinations[key])}` : ""}`}
+                aria-current={activeView === key ? "page" : undefined}
+                onClick={navigate(destinations[key])}
+              >
+                {text}
+              </a>
+            ))}
+          </nav>
+          <a
+            className="source-link"
+            href={brand.collectionURL}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Source: {brand.collectionName} ↗
+          </a>
+        </div>
       </header>
       <main>
-        <nav className="discovery-nav" aria-label="Explore recordings">
-          <button
-            aria-current={
-              !search.view || search.view === "artist" ? "page" : undefined
-            }
-            onClick={() => {
-              setHistory([]);
-              changeSearch({ ...emptySearch });
-            }}
-          >
-            {discoveryCopy.browse}
-          </button>
-          <button
-            aria-current={search.view === "calendar" ? "page" : undefined}
-            onClick={() => {
-              const now = new Date();
-              setHistory([]);
-              changeSearch({
-                ...emptySearch,
-                artist: search.artist,
-                view: "calendar",
-                month: String(now.getMonth() + 1).padStart(2, "0"),
-                year_from: String(now.getFullYear()),
-                year_to: String(now.getFullYear()),
-                sort: "date_desc",
-              });
-            }}
-          >
-            {discoveryCopy.calendar}
-          </button>
-          <button
-            aria-current={search.view === "on-this-day" ? "page" : undefined}
-            onClick={() => {
-              const now = new Date();
-              setHistory([]);
-              changeSearch({
-                ...emptySearch,
-                artist: search.artist,
-                view: "on-this-day",
-                month_day: `${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`,
-                sort: "date_desc",
-              });
-            }}
-          >
-            {discoveryCopy.onThisDay}
-          </button>
-        </nav>
         {search.artist &&
           search.view !== "calendar" &&
           search.view !== "on-this-day" && (
@@ -401,21 +431,10 @@ export default function App() {
             </p>
           </div>
         )}
-        <section aria-label="Recording catalog" className="search-card">
-          <BrowseDirectory
-            facets={facets}
-            error={facetError}
-            retry={() => {
-              setFacetError("");
-              setFacetRetry(facetRetry + 1);
-            }}
-            select={(filters) => {
-              if (filters.artist) {
-                setHistory([]);
-                changeSearch({ ...emptySearch, ...filters, view: "artist" });
-              } else applyFilters(filters);
-            }}
-          />
+        <section
+          aria-label="Recording catalog"
+          className={`search-card${home ? "" : " compact"}`}
+        >
           <form onSubmit={submit} className="catalog-filters">
             <div className="search-bar">
               <label>
@@ -430,7 +449,7 @@ export default function App() {
                 />
               </label>
               <button type="submit" className="primary">
-                Find shows ↗
+                Find shows
               </button>
             </div>
             <p id="search-help" className="search-help">
@@ -438,55 +457,69 @@ export default function App() {
               subjects, notes, and recording credits. Tour names use text
               search; the catalog has no separate tour field.
             </p>
-            <div className="filter-fields">
-              {(["artist", "venue", "year"] as const).map((key) => (
-                <label key={key}>
-                  {filterLabels[key]}
+            <details
+              className="filter-panel"
+              open={refining || undefined}
+              key={refining ? "refining" : "idle"}
+            >
+              <summary>Filter by artist, venue, year or date</summary>
+              <div className="filter-fields">
+                {(["artist", "venue", "year"] as const).map((key) => (
+                  <label key={key}>
+                    {filterLabels[key]}
+                    <input
+                      list={`catalog-${key}`}
+                      value={draft[key]}
+                      onChange={(e) => editFilter(key, e.target.value)}
+                      placeholder={`Any ${key}`}
+                      {...(key === "year"
+                        ? {
+                            inputMode: "numeric" as const,
+                            pattern: "(19|20)[0-9]{2}",
+                            maxLength: 4,
+                          }
+                        : { maxLength: 1000 })}
+                    />
+                  </label>
+                ))}
+                <label>
+                  From date
                   <input
-                    list={`catalog-${key}`}
-                    value={draft[key]}
-                    onChange={(e) => editFilter(key, e.target.value)}
-                    placeholder={`Any ${key}`}
-                    {...(key === "year"
-                      ? {
-                          inputMode: "numeric" as const,
-                          pattern: "(19|20)[0-9]{2}",
-                          maxLength: 4,
-                        }
-                      : { maxLength: 1000 })}
+                    type="date"
+                    value={draft.date_from}
+                    max={draft.date_to || undefined}
+                    onChange={(e) => editFilter("date_from", e.target.value)}
                   />
                 </label>
-              ))}
-              <label>
-                From date
-                <input
-                  type="date"
-                  value={draft.date_from}
-                  max={draft.date_to || undefined}
-                  onChange={(e) => editFilter("date_from", e.target.value)}
-                />
-              </label>
-              <label>
-                To date
-                <input
-                  type="date"
-                  value={draft.date_to}
-                  min={draft.date_from || undefined}
-                  onChange={(e) => editFilter("date_to", e.target.value)}
-                />
-              </label>
-              <label>
-                Source availability
-                <select
-                  value={draft.availability}
-                  onChange={(e) => editFilter("availability", e.target.value)}
-                >
-                  <option value="">All recordings</option>
-                  <option value="available">Available at last check</option>
-                  <option value="unavailable">Unavailable at last check</option>
-                </select>
-              </label>
-            </div>
+                <label>
+                  To date
+                  <input
+                    type="date"
+                    value={draft.date_to}
+                    min={draft.date_from || undefined}
+                    onChange={(e) => editFilter("date_to", e.target.value)}
+                  />
+                </label>
+                <label>
+                  Source availability
+                  <select
+                    value={draft.availability}
+                    onChange={(e) => editFilter("availability", e.target.value)}
+                  >
+                    <option value="">All recordings</option>
+                    <option value="available">Available at last check</option>
+                    <option value="unavailable">
+                      Unavailable at last check
+                    </option>
+                  </select>
+                </label>
+              </div>
+              <div className="filter-actions">
+                <button type="submit" className="primary">
+                  Apply filters
+                </button>
+              </div>
+            </details>
             {(["artists", "venues", "years"] as const).map((key) => (
               <datalist key={key} id={`catalog-${key.slice(0, -1)}`}>
                 {facets?.[key].map((entry) => (
@@ -496,80 +529,26 @@ export default function App() {
                 ))}
               </datalist>
             ))}
-            <div className="filter-actions">
-              <button type="submit" className="primary">
-                Apply filters
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setHistory([]);
-                  changeSearch({ ...emptySearch });
-                }}
-              >
-                Clear all
-              </button>
-            </div>
             {filterError && <p role="alert">{filterError}</p>}
           </form>
-          <div className="active-filters" aria-label="Applied filters">
-            {(Object.keys(filterLabels) as FilterKey[])
-              .filter((key) => search[key])
-              .map((key) => (
-                <button
-                  type="button"
-                  key={key}
-                  onClick={() => applyFilters({ [key]: "" })}
-                  aria-label={`Remove ${filterLabels[key]} filter`}
-                >
-                  <strong>{filterLabels[key]}:</strong>{" "}
-                  {search[key] === "available"
-                    ? "Available at last check"
-                    : search[key] === "unavailable"
-                      ? "Unavailable at last check"
-                      : search[key]}{" "}
-                  ×
-                </button>
-              ))}
-            <button
-              type="button"
-              onClick={() => {
-                void (
-                  navigator.clipboard
-                    ? navigator.clipboard.writeText(window.location.href)
-                    : Promise.reject(new Error("Clipboard unavailable"))
-                )
-                  .then(() => setCopied("Search link copied."))
-                  .catch(() =>
-                    setCopied(
-                      "Copy the address from your browser to share this search.",
-                    ),
-                  );
-              }}
-            >
-              Copy search link
-            </button>
-            {copied && <span role="status">{copied}</span>}
-          </div>
-          {catalog && (
-            <p className="import-status">
-              {catalog.status.imported.toLocaleString()} metadata records
-              imported · {catalog.status.pending.toLocaleString()} queued
-              {catalog.status.failed > 0
-                ? ` · ${catalog.status.failed.toLocaleString()} need attention`
-                : ""}
-              {catalog.status.discovery_complete
-                ? " · Collection discovery complete"
-                : " · Collection discovery incomplete"}
-              {catalog.status.playback &&
-                ` · ${catalog.status.playback.reviewed.toLocaleString()} approved for streaming · ${catalog.status.playback.pending.toLocaleString()} awaiting playback review · ${catalog.status.playback.unsupported.toLocaleString()} unsupported · ${catalog.status.playback.held.toLocaleString()} held for operator review · ${catalog.status.playback.retry.toLocaleString()} review retries`}
-              . Audio streams from the Internet Archive.
-              {catalog.status.last_error &&
-                ` Import paused: ${catalog.status.last_error}`}
-            </p>
-          )}
         </section>
-        <section aria-label="Recording list">
+        <BrowseDirectory
+          key={home ? "home" : "narrowed"}
+          open={home}
+          facets={facets}
+          error={facetError}
+          retry={() => {
+            setFacetError("");
+            setFacetRetry(facetRetry + 1);
+          }}
+          select={(filters) => {
+            if (filters.artist) {
+              setHistory([]);
+              changeSearch({ ...emptySearch, ...filters, view: "artist" });
+            } else applyFilters(filters);
+          }}
+        />
+        <section aria-label="Recording list" className="catalog">
           <div className="catalog-heading" ref={results}>
             <h2>
               {search.view === "on-this-day"
@@ -580,20 +559,71 @@ export default function App() {
                     ? `${search.artist} recordings`
                     : search.q
                       ? `Results for “${search.q}”`
-                      : Object.keys(filterLabels).some(
-                            (key) => search[key as FilterKey],
-                          )
+                      : appliedFilters.length
                         ? "Filtered recordings"
                         : "Browse the tape shelf"}
             </h2>
-            <span>
-              {catalog
-                ? `${catalog.total.toLocaleString()} recordings indexed`
-                : loading
-                  ? "Checking the catalog…"
-                  : "Catalog unavailable"}
-            </span>
+            <div className="catalog-meta">
+              <span className="catalog-count">
+                {catalog
+                  ? `${catalog.total.toLocaleString()} recordings`
+                  : loading
+                    ? "Checking the catalog…"
+                    : "Catalog unavailable"}
+              </span>
+              <button
+                type="button"
+                className="quiet share"
+                onClick={() => {
+                  void (
+                    navigator.clipboard
+                      ? navigator.clipboard.writeText(window.location.href)
+                      : Promise.reject(new Error("Clipboard unavailable"))
+                  )
+                    .then(() => setCopied("Search link copied."))
+                    .catch(() =>
+                      setCopied(
+                        "Copy the address from your browser to share this search.",
+                      ),
+                    );
+                }}
+              >
+                Copy search link
+              </button>
+              {copied && <span role="status">{copied}</span>}
+            </div>
           </div>
+          {appliedFilters.length > 0 && (
+            <div className="active-filters" aria-label="Applied filters">
+              {appliedFilters.map((key) => (
+                <button
+                  type="button"
+                  className="chip"
+                  key={key}
+                  onClick={() => applyFilters({ [key]: "" })}
+                  aria-label={`Remove ${filterLabels[key]} filter`}
+                >
+                  <strong>{filterLabels[key]}:</strong>{" "}
+                  {search[key] === "available"
+                    ? "Available at last check"
+                    : search[key] === "unavailable"
+                      ? "Unavailable at last check"
+                      : search[key]}{" "}
+                  <span aria-hidden="true">×</span>
+                </button>
+              ))}
+              <button
+                type="button"
+                className="quiet"
+                onClick={() => {
+                  setHistory([]);
+                  changeSearch({ ...emptySearch });
+                }}
+              >
+                Clear all
+              </button>
+            </div>
+          )}
           {loading && (
             <p role="status" className="notice">
               Loading recordings from the catalog…
@@ -655,13 +685,13 @@ export default function App() {
                     {label(recording.date).slice(0, 10) || "Date unknown"}
                   </span>
                   <span aria-hidden="true" className="arrow">
-                    ↗
+                    →
                   </span>
                 </button>
               </Fragment>
             ))}
           </div>
-          {catalog && (
+          {catalog && (catalog.cursor || history.length > 0) && (
             <nav aria-label="Catalog pages" className="pagination">
               <button
                 disabled={!history.length || loading}
@@ -674,7 +704,10 @@ export default function App() {
                 ← Previous
               </button>
               <span>
-                Page {history.length + 1} · ordered by catalog identifier
+                Page {history.length + 1} ·{" "}
+                {search.sort === "date_desc"
+                  ? "newest first"
+                  : "ordered by catalog identifier"}
               </span>
               <button
                 disabled={!catalog.cursor || !catalog.items.length || loading}
@@ -689,11 +722,41 @@ export default function App() {
           )}
         </section>
         <footer>
-          <span>
-            {brand.name} is built on Arkhiv. Recorded by tapers, preserved by
-            the Internet Archive.
-          </span>
-          <span>Availability and playback depend on the source recording.</span>
+          <div>
+            <p>
+              {brand.name} is built on Arkhiv. Recorded by tapers, preserved by
+              the Internet Archive.
+            </p>
+            <p>
+              Availability and playback depend on the source recording. Audio
+              streams from the Internet Archive.
+            </p>
+          </div>
+          {status && (
+            <p className="import-status">
+              {status.imported.toLocaleString()} metadata records imported
+              {status.playback &&
+                ` · ${status.playback.reviewed.toLocaleString()} approved for streaming`}
+              {status.discovery_complete
+                ? " · Collection discovery complete"
+                : " · Collection discovery incomplete"}
+              {[
+                [status.pending, "queued"],
+                [status.failed, "need attention"],
+                [status.playback?.pending, "awaiting playback review"],
+                [status.playback?.unsupported, "unsupported"],
+                [status.playback?.held, "held for operator review"],
+                [status.playback?.retry, "review retries"],
+              ]
+                .filter(([count]) => Number(count) > 0)
+                .map(
+                  ([count, text]) =>
+                    ` · ${Number(count).toLocaleString()} ${text}`,
+                )
+                .join("")}
+              {status.last_error && ` · Import paused: ${status.last_error}`}
+            </p>
+          )}
         </footer>
       </main>
       {selected && (
@@ -703,17 +766,19 @@ export default function App() {
           className="detail-backdrop"
         >
           <section className="recording-detail" aria-label="Recording details">
-            <button
-              className="close"
-              onClick={() => {
-                resolution.current?.abort();
-                setResolving(false);
-                setSelected("");
-              }}
-            >
-              Close ×
-            </button>
-            <p className="eyebrow">Recording label</p>
+            <div className="detail-header">
+              <p className="eyebrow">Recording label</p>
+              <button
+                className="quiet close"
+                onClick={() => {
+                  resolution.current?.abort();
+                  setResolving(false);
+                  setSelected("");
+                }}
+              >
+                Close ×
+              </button>
+            </div>
             {!detail && !detailError && <p role="status">Loading recording…</p>}
             {detailError && (
               <div role="alert">
@@ -930,7 +995,7 @@ export default function App() {
             artist={artistImageFor(playing.recording.metadata.creator)}
             name={label(playing.recording.metadata.title)}
           />
-          <div>
+          <div className="player-meta">
             <p className="eyebrow">
               Now playing · {label(playing.recording.metadata.creator)}
             </p>
@@ -945,22 +1010,26 @@ export default function App() {
             track={{ ...current, url: playing.url }}
             onEnded={advance}
           />
-          <button
-            onClick={advance}
-            disabled={resolving || playing.index + 1 === playing.tracks.length}
-          >
-            Next →
-          </button>
-          <button
-            onClick={() => {
-              resolution.current?.abort();
-              setResolving(false);
-              setPlayError("");
-              setPlaying(undefined);
-            }}
-          >
-            Stop ×
-          </button>
+          <div className="player-actions">
+            <button
+              onClick={advance}
+              disabled={
+                resolving || playing.index + 1 === playing.tracks.length
+              }
+            >
+              Next →
+            </button>
+            <button
+              onClick={() => {
+                resolution.current?.abort();
+                setResolving(false);
+                setPlayError("");
+                setPlaying(undefined);
+              }}
+            >
+              Stop ×
+            </button>
+          </div>
         </aside>
       )}
     </div>
