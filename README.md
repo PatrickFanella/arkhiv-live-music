@@ -200,6 +200,5 @@ operator workflow, with no provider requests during public page reads.
 
 ## Public address
 
-The public address is https://headcount.subcult.tv/. The Lineage product name and
-J-Card interface remain the same. Canonical metadata, Open Graph URL, sitemap and
-robots discovery use this address; the existing Lineage hostname remains an alias.
+The public address is https://lineage.subcult.tv/. Canonical metadata, Open Graph
+URL, sitemap and robots discovery use this address.
