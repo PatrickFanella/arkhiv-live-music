@@ -829,3 +829,166 @@ dd {
     height: 36px;
   }
 }
+
+/* Date browsing and artist profiles use the same paper, rules and tape labels. */
+.discovery-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 1.5rem var(--spacing-gutter) 0;
+}
+.discovery-nav [aria-current="page"] {
+  color: var(--color-paper);
+  background: var(--color-ink);
+}
+.artist-page,
+.date-discovery {
+  margin: 2rem var(--spacing-gutter);
+  border-top: 2px solid var(--color-ink);
+  padding-top: 1.5rem;
+}
+.artist-page {
+  display: grid;
+  grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr);
+  gap: 2rem;
+}
+.artist-page h1,
+.date-discovery h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  max-width: none;
+  line-height: 1.1;
+  margin: 0.5rem 0 1.5rem;
+}
+.artist-page p {
+  max-width: 65ch;
+}
+.artist-portrait figure {
+  margin: 0;
+}
+.artist-portrait img {
+  width: 100%;
+  max-height: 24rem;
+  object-fit: cover;
+  border: 1px solid var(--color-rule-strong);
+}
+.artist-portrait figcaption {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-ink-soft);
+}
+.portrait-placeholder {
+  display: grid;
+  place-content: center;
+  min-height: 15rem;
+  padding: 2rem;
+  text-align: center;
+  border: 1px dashed var(--color-rule-strong);
+  color: var(--color-ink-soft);
+  background: var(--color-paper-deep);
+}
+.artist-summary,
+.source-credit {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-ink-soft);
+}
+.artist-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  border-block: 1px solid var(--color-rule);
+  padding: 1rem 0;
+}
+.artist-facts dt {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+.artist-facts dd {
+  margin: 0.3rem 0 0;
+}
+.date-controls,
+.year-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.date-controls label,
+.year-picker label {
+  display: grid;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+.year-picker input {
+  width: 8rem;
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.4rem;
+  max-width: 55rem;
+  margin: 1.5rem 0;
+}
+.calendar-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  min-height: 5rem;
+  padding: 0.7rem;
+  background: var(--color-paper-raised);
+}
+.calendar-grid button strong {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+}
+.calendar-grid button span {
+  color: var(--color-marker);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+.calendar-grid button:disabled {
+  opacity: 0.55;
+}
+.calendar-grid button[aria-pressed="true"] {
+  outline: 2px solid var(--color-marker);
+  outline-offset: -2px;
+}
+.calendar-grid button:hover:not(:disabled) {
+  background: var(--color-paper-deep);
+  color: var(--color-ink);
+}
+.calendar-weekday {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.5rem;
+  color: var(--color-ink-soft);
+}
+.recording-year {
+  margin: 2rem 0 0.5rem;
+  font-family: var(--font-mono);
+  color: var(--color-marker);
+  font-size: 1.5rem;
+}
+@media (max-width: 600px) {
+  .artist-page {
+    grid-template-columns: 1fr;
+  }
+  .artist-portrait {
+    max-width: 18rem;
+  }
+  .calendar-grid {
+    gap: 0.2rem;
+  }
+  .calendar-grid button {
+    padding: 0.35rem;
+    min-height: 4rem;
+  }
+  .calendar-grid button span {
+    font-size: 0.65rem;
+  }
+}

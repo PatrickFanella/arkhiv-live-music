@@ -1,3 +1,4 @@
+import type { ArtistProfile } from "./archive";
 // Curated references, independent of imported recording metadata.
 // Add exact aliases only after confirming the artist and inspecting the image.
 export type ArtistImage = {
@@ -9,6 +10,7 @@ export type ArtistImage = {
   source: string;
   credit: string;
   rights: string;
+  rightsURL?: string;
   verifiedAt: string;
 };
 const rights =
@@ -70,4 +72,31 @@ export function artistImageFor(creator: unknown): ArtistImage | undefined {
       (alias) => artistKey(alias) === artistKey(name),
     ),
   );
+}
+
+// External profile images keep attribution independent of recording metadata.
+export function artistProfileImage(
+  profile: ArtistProfile,
+): ArtistImage | undefined {
+  const curated = artistImageFor(profile.artist);
+  if (curated?.kind === "photo") return curated;
+  const photo = profile.profile?.photo;
+  if (
+    !photo ||
+    !photo.url.startsWith("https://upload.wikimedia.org/") ||
+    !photo.source.startsWith("https://commons.wikimedia.org/")
+  )
+    return undefined;
+  return {
+    artist: profile.artist,
+    aliases: [],
+    kind: "photo",
+    url: photo.url,
+    alt: `${profile.artist} artist photograph`,
+    source: photo.source,
+    credit: photo.credit,
+    rights: photo.license,
+    rightsURL: photo.license_url,
+    verifiedAt: profile.profile_updated_at?.slice(0, 10) || "",
+  };
 }

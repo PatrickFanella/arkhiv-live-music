@@ -184,3 +184,16 @@ update compatible pins alongside the siblings while leaving this app's design
 and deployment timing independent.
 
 GPL-3.0-only applies to the software. Recording terms remain with their sources.
+
+## Artist pages, calendar and On this day
+
+Artist pages pair retained recordings with independently cached, attributed
+MusicBrainz/Wikipedia information and photographs. The historical concert calendar
+supports one year, a year range, or all years. On this day lists a chosen month/day
+across years. Dates and filters are shareable through the existing root URL.
+
+These views require Arkhiv `source_discovery` module 1. Published core 0.4.1 does
+not provide it; normal browsing remains available and the new views report the
+missing capability. See [feature behavior and qualification](docs/reference/artist-and-date-discovery.md)
+before release/adoption. Provider matching and fetching belong to the engine's
+operator workflow, with no provider requests during public page reads.

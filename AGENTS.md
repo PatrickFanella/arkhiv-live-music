@@ -52,3 +52,8 @@ Draft issue forms do not approve pickup. Apply `ready-for-agent` and `agent:queu
 only after reviewing scope and verification, or use the reviewed ready-for-pickup
 form. Treat `ready-for-agent` alone and assignment to `open-pilot` as pickup approval
 when enabled. `make typecheck` does not emit application files.
+
+Artist/date discovery is an optional `source_discovery` module-1 capability until
+its reviewed core release is adopted. Preserve the published pins and capability
+guard. Artist enrichment sources stay independent of recording metadata, and all
+date/artist views must honor source-catalog exclusions.
