@@ -2,7 +2,11 @@ import { representationURL } from "@subcult/archive-viewer/catalog";
 import type { RepresentationTransport } from "@subcult/archive-viewer/catalog";
 import StreamPlayer from "./StreamPlayer";
 import Artwork from "./Artwork";
-import { artistImageFor } from "./artist-images";
+import {
+  artistImageFor,
+  artistPhotosFrom,
+  type ArtistPhotos,
+} from "./artist-images";
 import { recordingArtwork } from "./artwork";
 import BrowseDirectory from "./BrowseDirectory";
 import ArtistPage from "./ArtistPage";
@@ -32,6 +36,7 @@ export default function App() {
     readSearch(typeof window === "undefined" ? "" : window.location.search),
   );
   const [supportsDiscovery, setSupportsDiscovery] = useState<boolean>();
+  const [artistPhotos, setArtistPhotos] = useState<ArtistPhotos>();
   const [draft, setDraft] = useState<Search>(search);
   const [facets, setFacets] = useState<Facets>();
   const [facetError, setFacetError] = useState("");
@@ -77,6 +82,28 @@ export default function App() {
   useEffect(() => {
     if (selected && !dialog.current?.open) dialog.current?.showModal();
   }, [selected]);
+  // Artist photographs are decorative; an older engine or a failed request
+  // leaves the curated images in place.
+  useEffect(() => {
+    const controller = new AbortController();
+    getJSON<{ modules: Record<string, string> }>(
+      "/api/version",
+      controller.signal,
+    )
+      .then((version) =>
+        version.modules.source_artist_photos === "1"
+          ? getJSON<{ artists: Parameters<typeof artistPhotosFrom>[0] }>(
+              "/api/source-catalog/v1/artist-photos?collection=etree",
+              controller.signal,
+            )
+          : undefined,
+      )
+      .then((list) => {
+        if (list) setArtistPhotos(artistPhotosFrom(list.artists));
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     getJSON<{
@@ -536,6 +563,7 @@ export default function App() {
           key={home ? "home" : "narrowed"}
           open={home}
           facets={facets}
+          artistPhotos={artistPhotos}
           error={facetError}
           retry={() => {
             setFacetError("");
@@ -664,7 +692,7 @@ export default function App() {
                     {String(history.length * 100 + index + 1).padStart(3, "0")}
                   </span>
                   <Artwork
-                    artist={artistImageFor(recording.creator)}
+                    artist={artistImageFor(recording.creator, artistPhotos)}
                     name={label(recording.creator)}
                   />
                   <span className="tape-info">
@@ -803,7 +831,7 @@ export default function App() {
                     detail.files || [],
                     !!detail.unavailable,
                   )}
-                  artist={artistImageFor(detail.metadata.creator)}
+                  artist={artistImageFor(detail.metadata.creator, artistPhotos)}
                   name={label(detail.metadata.title) || selected}
                   caption
                 />
@@ -992,7 +1020,10 @@ export default function App() {
               playing.identifier,
               playing.recording.files || [],
             )}
-            artist={artistImageFor(playing.recording.metadata.creator)}
+            artist={artistImageFor(
+              playing.recording.metadata.creator,
+              artistPhotos,
+            )}
             name={label(playing.recording.metadata.title)}
           />
           <div className="player-meta">

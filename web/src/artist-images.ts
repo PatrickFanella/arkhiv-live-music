@@ -1,4 +1,4 @@
-import type { ArtistProfile } from "./archive";
+import type { ArtistPhoto, ArtistProfile } from "./archive";
 // Curated references, independent of imported recording metadata.
 // Add exact aliases only after confirming the artist and inspecting the image.
 export type ArtistImage = {
@@ -63,15 +63,63 @@ export const artistImages: ArtistImage[] = [
 ];
 const artistKey = (name: string) =>
   name.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase();
-export function artistImageFor(creator: unknown): ArtistImage | undefined {
+// Engine photographs keyed by lowercased source artist name.
+export type ArtistPhotos = ReadonlyMap<string, ArtistImage>;
+
+function commonsImage(
+  artist: string,
+  photo: ArtistPhoto | undefined,
+  verifiedAt: string,
+): ArtistImage | undefined {
+  if (
+    !photo ||
+    !photo.url.startsWith("https://upload.wikimedia.org/") ||
+    !photo.source.startsWith("https://commons.wikimedia.org/")
+  )
+    return undefined;
+  return {
+    artist,
+    aliases: [],
+    kind: "photo",
+    url: photo.url,
+    alt: `${artist} artist photograph`,
+    source: photo.source,
+    credit: photo.credit,
+    rights: photo.license,
+    rightsURL: photo.license_url,
+    verifiedAt,
+  };
+}
+
+export function artistPhotosFrom(
+  entries: { artist: string; photo: ArtistPhoto }[],
+): ArtistPhotos {
+  const photos = new Map<string, ArtistImage>();
+  for (const { artist, photo } of entries) {
+    const image = commonsImage(artist, photo, "");
+    if (image) photos.set(artistKey(artist), image);
+  }
+  return photos;
+}
+
+// A curated photograph wins, then an engine photograph, then a curated logo.
+export function artistImageFor(
+  creator: unknown,
+  photos?: ArtistPhotos,
+): ArtistImage | undefined {
   const name =
     Array.isArray(creator) && creator.length === 1 ? creator[0] : creator;
   if (typeof name !== "string") return undefined;
-  return artistImages.find((image) =>
+  const curated = artistImages.find((image) =>
     [image.artist, ...image.aliases].some(
       (alias) => artistKey(alias) === artistKey(name),
     ),
   );
+  if (curated?.kind === "photo") return curated;
+  const photo = photos?.get(artistKey(name));
+  return photo
+    ? { ...photo, artist: name, alt: `${name} artist photograph` }
+    : curated;
 }
 
 // External profile images keep attribution independent of recording metadata.
@@ -80,23 +128,9 @@ export function artistProfileImage(
 ): ArtistImage | undefined {
   const curated = artistImageFor(profile.artist);
   if (curated?.kind === "photo") return curated;
-  const photo = profile.profile?.photo;
-  if (
-    !photo ||
-    !photo.url.startsWith("https://upload.wikimedia.org/") ||
-    !photo.source.startsWith("https://commons.wikimedia.org/")
-  )
-    return undefined;
-  return {
-    artist: profile.artist,
-    aliases: [],
-    kind: "photo",
-    url: photo.url,
-    alt: `${profile.artist} artist photograph`,
-    source: photo.source,
-    credit: photo.credit,
-    rights: photo.license,
-    rightsURL: photo.license_url,
-    verifiedAt: profile.profile_updated_at?.slice(0, 10) || "",
-  };
+  return commonsImage(
+    profile.artist,
+    profile.profile?.photo,
+    profile.profile_updated_at?.slice(0, 10) || "",
+  );
 }
