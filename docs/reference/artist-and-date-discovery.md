@@ -43,7 +43,7 @@ Enrichment does not overwrite source recording metadata or editorial corrections
 
 ## Compatibility and review
 
-The consumer adopts published core 0.4.2 and retains viewer 0.4.3. The new views check
+The consumer adopts published core 0.4.3 and retains viewer 0.4.3. The new views check
 `source_discovery` capability and show an update notice on older cores, instead
 of sending filters an old engine might ignore. Normal browsing remains usable.
 Use the development-core Compose override with the canonical Arkhiv checkout

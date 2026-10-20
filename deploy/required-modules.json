@@ -2,5 +2,6 @@
   "catalog": "1",
   "audio": "1",
   "source_catalog": "1",
-  "source_discovery": "1"
+  "source_discovery": "1",
+  "source_artist_photos": "1"
 }
