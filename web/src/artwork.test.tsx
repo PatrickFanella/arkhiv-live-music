@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "react-dom/server";
 import { recordingArtwork } from "./artwork";
-import { artistImageFor, artistImages } from "./artist-images";
+import {
+  artistImageFor,
+  artistImages,
+  artistPhotosFrom,
+} from "./artist-images";
 import Artwork from "./Artwork";
 
 describe("Recording artwork", () => {
@@ -51,6 +55,34 @@ describe("Curated artist images", () => {
     expect(artistImageFor(["Ween"])?.artist).toBe("Ween");
     expect(artistImageFor("Ween tribute band")).toBeUndefined();
     expect(artistImageFor(["Ween", "Billy Strings"])).toBeUndefined();
+  });
+  it("uses engine photographs after curated photographs and before logos", () => {
+    const photo = (name: string) => ({
+      url: `https://upload.wikimedia.org/wikipedia/commons/a/ab/${name}.jpg`,
+      source: `https://commons.wikimedia.org/wiki/File:${name}.jpg`,
+      credit: "Photographer",
+      license: "CC BY-SA 4.0",
+      license_url: "https://creativecommons.org/licenses/by-sa/4.0",
+    });
+    const photos = artistPhotosFrom([
+      { artist: "ween", photo: photo("Ween") },
+      { artist: "phil lesh and friends", photo: photo("Phil") },
+      { artist: "max creek", photo: photo("Max") },
+      {
+        artist: "elsewhere",
+        photo: { ...photo("Elsewhere"), url: "https://example.com/x.jpg" },
+      },
+    ]);
+    expect(artistImageFor("Ween", photos)?.url).toContain("archive.org");
+    expect(artistImageFor("Phil Lesh and Friends", photos)?.url).toContain(
+      "Phil.jpg",
+    );
+    const creek = artistImageFor(["MAX CREEK"], photos);
+    expect(creek?.url).toContain("Max.jpg");
+    expect(creek?.alt).toBe("MAX CREEK artist photograph");
+    expect(creek?.rightsURL).toContain("creativecommons.org");
+    expect(artistImageFor("Elsewhere", photos)).toBeUndefined();
+    expect(artistImageFor("Max Creek")).toBeUndefined();
   });
   it("retains source and rights provenance for every curated entry", () => {
     for (const image of artistImages) {

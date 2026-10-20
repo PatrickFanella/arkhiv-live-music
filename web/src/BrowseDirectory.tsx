@@ -1,6 +1,6 @@
 import { useState, useSyncExternalStore } from "react";
 import Artwork from "./Artwork";
-import { artistImageFor } from "./artist-images";
+import { artistImageFor, type ArtistPhotos } from "./artist-images";
 import type { Facets } from "./archive";
 import type { Search } from "./browse";
 
@@ -29,12 +29,14 @@ function useNarrow() {
 export default function BrowseDirectory({
   open = true,
   facets,
+  artistPhotos,
   error,
   retry,
   select,
 }: {
   open?: boolean;
   facets?: Facets;
+  artistPhotos?: ArtistPhotos;
   error: string;
   retry: () => void;
   select: (filters: Partial<Search>) => void;
@@ -145,7 +147,7 @@ export default function BrowseDirectory({
                 >
                   {dimension === "artists" && (
                     <Artwork
-                      artist={artistImageFor(entry.value)}
+                      artist={artistImageFor(entry.value, artistPhotos)}
                       name={entry.value}
                     />
                   )}

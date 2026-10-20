@@ -30,6 +30,12 @@ lead to Wikidata and the corresponding English Wikipedia page. Wikimedia Commons
 image metadata supplies credits and a license. A photo without attribution is
 omitted. Existing curated photographs remain independent in `artist-images.ts`.
 
+When the engine reports `source_artist_photos` module 1, the frontend loads its
+artist photograph list once. The collection directory, recording rows, recording
+detail and player then show those Commons photographs with their credit and
+license. A curated photograph still wins, and an engine photograph replaces a
+curated logo. Older engines or a failed request leave the curated images alone.
+
 The operator helper caches metadata for seven days, serializes outbound requests,
 uses an identifying User-Agent, and preserves provider cooldowns. It retains raw
 JSON bytes with timestamps. It never fetches recording audio or image binaries.
