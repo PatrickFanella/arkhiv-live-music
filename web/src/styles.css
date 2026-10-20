@@ -1008,6 +1008,10 @@ dd {
   font-size: 0.8rem;
   color: var(--color-ink-soft);
 }
+.artist-biography {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .artist-facts {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
@@ -1222,7 +1226,8 @@ dd {
     flex-wrap: wrap;
   }
   .artist-page {
-    grid-template-columns: 1fr;
+    /* minmax(0, …) lets long biography text wrap instead of widening the page. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem;
   }
   .artist-portrait {
