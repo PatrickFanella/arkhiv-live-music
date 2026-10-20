@@ -91,13 +91,30 @@ function commonsImage(
   };
 }
 
+// Wikimedia serves only standard thumbnail widths; 330px covers the catalog's
+// largest artist artwork at 2x without loading multi-megabyte originals.
+const thumbnailWidth = 330;
+const original =
+  /^https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\/([0-9a-f])\/([0-9a-f]{2})\/([^/?#]+\.(?:jpe?g|png|gif|webp|svg))(?:[?#].*)?$/i;
+export function commonsThumbnail(url: string, width = thumbnailWidth) {
+  const match = original.exec(url);
+  if (!match) return url;
+  const [, a, ab, name] = match;
+  const suffix = /\.svg$/i.test(name) ? ".png" : "";
+  return `https://upload.wikimedia.org/wikipedia/commons/thumb/${a}/${ab}/${name}/${width}px-${name}${suffix}`;
+}
+
 export function artistPhotosFrom(
   entries: { artist: string; photo: ArtistPhoto }[],
 ): ArtistPhotos {
   const photos = new Map<string, ArtistImage>();
   for (const { artist, photo } of entries) {
     const image = commonsImage(artist, photo, "");
-    if (image) photos.set(artistKey(artist), image);
+    if (image)
+      photos.set(artistKey(artist), {
+        ...image,
+        url: commonsThumbnail(image.url),
+      });
   }
   return photos;
 }
