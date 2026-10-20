@@ -18,15 +18,16 @@
     "personal": "1",
     "chat": "1",
     "source_catalog": "1",
-    "source_discovery": "1"
+    "source_discovery": "1",
+    "source_artist_photos": "1"
   },
   "engine_repository": "git.subcult.tv/subculture-collective/archive-core",
   "schema_strategy": "checksum-locked-additive-migrations",
   "compatibility_window": "current and previous reviewed release",
   "rollout": "reviewed-per-consumer",
-  "version": "0.4.2",
-  "engine_digest": "git.subcult.tv/subculture-collective/archive-core@sha256:132a4b8d0d6adeccdfceba19f47d20a9a574588487ac7abb6477fff1fe2ed3d5",
-  "source_revision": "8bf4960d6e780b41630c8f0f92052fe861713686",
+  "version": "0.4.3",
+  "engine_digest": "git.subcult.tv/subculture-collective/archive-core@sha256:ed1945d9dd72d3d421dbb678870d2ceb11e029ab7b4310c86c161ecc6b932131",
+  "source_revision": "eb51e8802aee4dfc3c2b4b7dcf6fead92e73434d",
   "optional_migrations": {
     "community/0001_personal_chat.sql": "718cc0d07c225d3743c2890bded533bf82fb4866a23b94932faf88c56a619c32",
     "community/0002_media_rooms.sql": "1816b036ed8fdd9fa2c6e5a608b836eabfaea9677e57e33df351e7ab708f7990"
