@@ -32,6 +32,10 @@ export const discoveryCopy = {
   noPhoto: "Artist photograph not available",
   sourceFacts: "Artist information from MusicBrainz",
   biographyCredit: "Wikipedia contributors · CC BY-SA 4.0",
+  collectionBiographyCredit:
+    "Text from the artist's Live Music Archive collection page",
+  readCollection: "View the collection",
+  sourceCollection: "Artist collection on the Live Music Archive",
   unknown: "Not recorded",
   loadingArtist: "Loading artist information…",
   artistError:

@@ -30,6 +30,13 @@ export default function ArtistPage({
   }, [artist, available, retry]);
   const external = profile?.profile;
   const photo = profile && artistProfileImage(profile);
+  const collectionText =
+    external?.biography?.license === "Internet Archive collection description";
+  const factsSource = external?.musicbrainz_url
+    ? { href: external.musicbrainz_url, label: copy.sourceFacts }
+    : external?.archive_url
+      ? { href: external.archive_url, label: copy.sourceCollection }
+      : undefined;
   const facts = external
     ? [
         [copy.artistType, external.type],
@@ -98,24 +105,42 @@ export default function ArtistPage({
             </p>
             {external?.biography ? (
               <>
-                <p>{external.biography.text}</p>
-                <p className="source-credit">
-                  <a
-                    href={external.biography.source}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {copy.readBiography}
-                  </a>{" "}
-                  ·{" "}
-                  <a
-                    href="https://creativecommons.org/licenses/by-sa/4.0/"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {copy.biographyCredit}
-                  </a>
-                </p>
+                {external.biography.text
+                  .split(/\n\s*\n/)
+                  .filter(Boolean)
+                  .map((paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ))}
+                {collectionText ? (
+                  <p className="source-credit">
+                    <a
+                      href={external.biography.source}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {copy.readCollection}
+                    </a>{" "}
+                    · {copy.collectionBiographyCredit}
+                  </p>
+                ) : (
+                  <p className="source-credit">
+                    <a
+                      href={external.biography.source}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {copy.readBiography}
+                    </a>{" "}
+                    ·{" "}
+                    <a
+                      href="https://creativecommons.org/licenses/by-sa/4.0/"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {copy.biographyCredit}
+                    </a>
+                  </p>
+                )}
               </>
             ) : (
               <p>{copy.noBiography}</p>
@@ -130,14 +155,10 @@ export default function ArtistPage({
                 ))}
               </dl>
             )}
-            {external && (
+            {factsSource && (
               <p className="source-credit">
-                <a
-                  href={external.musicbrainz_url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {copy.sourceFacts}
+                <a href={factsSource.href} target="_blank" rel="noreferrer">
+                  {factsSource.label}
                 </a>
                 {profile.profile_updated_at &&
                   ` · Updated ${profile.profile_updated_at.slice(0, 10)}`}

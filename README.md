@@ -15,13 +15,16 @@ repository, package and Compose project keep the `arkhiv-live-music` name.
 
 ## Shared releases
 
-The published viewer pin is 0.4.3 and the engine receipt pins core 0.4.3, including
+The published viewer pin is 0.4.3 and the engine receipt pins core 0.4.4, including
 the source metadata catalog, batch playback reviews and nested audio support from
 [Arkhiv PR 129](https://git.subcult.tv/subculture-collective/arkhiv/pulls/129).
 The engine image uses an immutable registry digest. The viewer retains its
-core 0.3.0 API compatibility receipt; core 0.4.3 preserves those API contracts
-and migration checksums. Core 0.4.3 adds `source_artist_photos` module 1, the artist
-photograph list used by the directory, recording rows and player.
+core 0.3.0 API compatibility receipt; core 0.4.4 preserves those API contracts
+and existing migration checksums. Core 0.4.3 added `source_artist_photos` module 1,
+the artist photograph list used by the directory, recording rows and player. Core
+0.4.4 adds `source_artist_media` module 1: the engine stores each artist photograph
+itself and serves it from `/api/source-catalog/v1/artist-media/{sha256}`, and an
+artist profile can be bound to the artist's Live Music Archive collection.
 
 The frontend requires `source_catalog` and `source_discovery` module 1 and checks `/api/version` before
 loading its catalog. `make verify` validates code, configuration and pin provenance;
@@ -194,7 +197,7 @@ supports one year, a year range, or all years. On this day lists a chosen month/
 across years. Dates and filters are shareable through the existing root URL.
 
 These views use Arkhiv `source_discovery` module 1, supplied by the pinned core
-0.4.3 release. The capability guard still reports an outdated runtime rather than
+0.4.4 release. The capability guard still reports an outdated runtime rather than
 letting it silently ignore date filters. See [feature behavior and qualification](docs/reference/artist-and-date-discovery.md)
 for behavior and verification. Provider matching and fetching belong to the engine's
 operator workflow, with no provider requests during public page reads.

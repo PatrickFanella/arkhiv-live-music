@@ -88,6 +88,50 @@ describe("Curated artist images", () => {
     );
     expect(artistImageFor("Max Creek")).toBeUndefined();
   });
+  it("prefers images stored by the engine and labels collection images", () => {
+    const media = (c: string) => ({
+      sha256: c.repeat(64),
+      content_type: "image/jpeg",
+      width: 330,
+      height: 330,
+    });
+    const collection = {
+      url: "https://archive.org/download/Ween/Ween_itemimage.jpg",
+      source: "https://archive.org/details/Ween",
+      credit: "Ween collection, Live Music Archive",
+      license: "Internet Archive collection image",
+      license_url: "",
+    };
+    const photos = artistPhotosFrom([
+      {
+        artist: "ween",
+        photo: { ...collection, image: media("a"), thumbnail: media("b") },
+      },
+      { artist: "unstored", photo: collection },
+      {
+        artist: "phish",
+        photo: {
+          url: "https://upload.wikimedia.org/wikipedia/commons/a/ab/P.jpg",
+          source: "https://commons.wikimedia.org/wiki/File:P.jpg",
+          credit: "Photographer",
+          license: "CC BY 4.0",
+          license_url: "https://creativecommons.org/licenses/by/4.0",
+          thumbnail: media("c"),
+        },
+      },
+    ]);
+    const ween = artistImageFor("Ween", photos);
+    expect(ween?.url).toBe(
+      `/api/source-catalog/v1/artist-media/${"b".repeat(64)}?collection=etree`,
+    );
+    expect(ween?.rightsURL).toBeUndefined();
+    expect(ween?.rights).toContain("artist collection on Internet Archive");
+    expect(artistImageFor("Unstored", photos)).toBeUndefined();
+    expect(artistImageFor("Phish", photos)?.url).toContain("c".repeat(64));
+    expect(artistImageFor("Phish", photos)?.rightsURL).toContain(
+      "creativecommons.org",
+    );
+  });
   it("requests standard-width Commons thumbnails", () => {
     expect(
       commonsThumbnail(

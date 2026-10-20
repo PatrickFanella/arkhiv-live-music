@@ -12,6 +12,8 @@ export type ArtistImage = {
   rights: string;
   rightsURL?: string;
   verifiedAt: string;
+  // Served from the engine's own copy rather than the provider.
+  stored?: boolean;
 };
 const rights =
   "Provided by the artist collection on Internet Archive. A reuse license is not recorded here.";
@@ -66,28 +68,46 @@ const artistKey = (name: string) =>
 // Engine photographs keyed by lowercased source artist name.
 export type ArtistPhotos = ReadonlyMap<string, ArtistImage>;
 
-function commonsImage(
+const archiveImageLicense = "Internet Archive collection image";
+const mediaID = /^[0-9a-f]{64}$/;
+export const artistMediaURL = (sha256: string) =>
+  `/api/source-catalog/v1/artist-media/${sha256}?collection=etree`;
+
+// An engine photograph: a Commons file, or the artist's Live Music Archive
+// collection image. Stored renditions are used when the engine has them.
+function engineImage(
   artist: string,
   photo: ArtistPhoto | undefined,
   verifiedAt: string,
+  size: "image" | "thumbnail",
 ): ArtistImage | undefined {
-  if (
-    !photo ||
-    !photo.url.startsWith("https://upload.wikimedia.org/") ||
-    !photo.source.startsWith("https://commons.wikimedia.org/")
-  )
-    return undefined;
+  if (!photo) return undefined;
+  const commons =
+    photo.url.startsWith("https://upload.wikimedia.org/") &&
+    photo.source.startsWith("https://commons.wikimedia.org/");
+  const collection =
+    photo.license === archiveImageLicense &&
+    photo.url.startsWith("https://archive.org/download/") &&
+    photo.source.startsWith("https://archive.org/details/");
+  const stored = photo[size] ?? photo.image;
+  const local = stored && mediaID.test(stored.sha256);
+  if (!(commons || collection) || (collection && !local)) return undefined;
   return {
     artist,
     aliases: [],
     kind: "photo",
-    url: photo.url,
+    url: local
+      ? artistMediaURL(stored.sha256)
+      : size === "thumbnail"
+        ? commonsThumbnail(photo.url)
+        : photo.url,
     alt: `${artist} artist photograph`,
     source: photo.source,
     credit: photo.credit,
-    rights: photo.license,
-    rightsURL: photo.license_url,
+    rights: collection ? rights : photo.license,
+    rightsURL: collection ? undefined : photo.license_url,
     verifiedAt,
+    stored: Boolean(local),
   };
 }
 
@@ -109,17 +129,14 @@ export function artistPhotosFrom(
 ): ArtistPhotos {
   const photos = new Map<string, ArtistImage>();
   for (const { artist, photo } of entries) {
-    const image = commonsImage(artist, photo, "");
-    if (image)
-      photos.set(artistKey(artist), {
-        ...image,
-        url: commonsThumbnail(image.url),
-      });
+    const image = engineImage(artist, photo, "", "thumbnail");
+    if (image) photos.set(artistKey(artist), image);
   }
   return photos;
 }
 
-// A curated photograph wins, then an engine photograph, then a curated logo.
+// An image stored by the engine wins. Then a curated photograph, an engine
+// photograph loaded from its provider, and last a curated logo.
 export function artistImageFor(
   creator: unknown,
   photos?: ArtistPhotos,
@@ -132,22 +149,29 @@ export function artistImageFor(
       (alias) => artistKey(alias) === artistKey(name),
     ),
   );
-  if (curated?.kind === "photo") return curated;
   const photo = photos?.get(artistKey(name));
-  return photo
-    ? { ...photo, artist: name, alt: `${name} artist photograph` }
-    : curated;
+  const engine = photo && {
+    ...photo,
+    artist: name,
+    alt: `${name} artist photograph`,
+  };
+  if (engine?.stored) return engine;
+  if (curated?.kind === "photo") return curated;
+  return engine ?? curated;
 }
 
 // External profile images keep attribution independent of recording metadata.
 export function artistProfileImage(
   profile: ArtistProfile,
 ): ArtistImage | undefined {
-  const curated = artistImageFor(profile.artist);
-  if (curated?.kind === "photo") return curated;
-  return commonsImage(
+  const engine = engineImage(
     profile.artist,
     profile.profile?.photo,
     profile.profile_updated_at?.slice(0, 10) || "",
+    "image",
   );
+  if (engine?.stored) return engine;
+  const curated = artistImageFor(profile.artist);
+  if (curated?.kind === "photo") return curated;
+  return engine ?? curated;
 }
