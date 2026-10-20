@@ -5,6 +5,7 @@ import {
   artistImageFor,
   artistImages,
   artistPhotosFrom,
+  commonsThumbnail,
 } from "./artist-images";
 import Artwork from "./Artwork";
 
@@ -82,7 +83,41 @@ describe("Curated artist images", () => {
     expect(creek?.alt).toBe("MAX CREEK artist photograph");
     expect(creek?.rightsURL).toContain("creativecommons.org");
     expect(artistImageFor("Elsewhere", photos)).toBeUndefined();
+    expect(creek?.url).toBe(
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Max.jpg/330px-Max.jpg",
+    );
     expect(artistImageFor("Max Creek")).toBeUndefined();
+  });
+  it("requests standard-width Commons thumbnails", () => {
+    expect(
+      commonsThumbnail(
+        "https://upload.wikimedia.org/wikipedia/commons/6/6b/Grateful_Dead_%281970%29.png",
+      ),
+    ).toBe(
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Grateful_Dead_%281970%29.png/330px-Grateful_Dead_%281970%29.png",
+    );
+    expect(
+      commonsThumbnail(
+        "https://upload.wikimedia.org/wikipedia/commons/3/35/Moeband.JPG?utm_source=commons.wikimedia.org",
+      ),
+    ).toBe(
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Moeband.JPG/330px-Moeband.JPG",
+    );
+    expect(
+      commonsThumbnail(
+        "https://upload.wikimedia.org/wikipedia/commons/a/ab/Logo.svg",
+      ),
+    ).toBe(
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Logo.svg/330px-Logo.svg.png",
+    );
+    const thumb =
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/X.jpg/720px-X.jpg";
+    expect(commonsThumbnail(thumb)).toBe(thumb);
+    expect(
+      commonsThumbnail(
+        "https://upload.wikimedia.org/wikipedia/commons/a/ab/Scan.tif",
+      ),
+    ).toContain("Scan.tif");
   });
   it("retains source and rights provenance for every curated entry", () => {
     for (const image of artistImages) {
