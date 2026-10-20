@@ -110,12 +110,21 @@ export async function getJSON<T>(
   return catalogRequest<T>(path, signal);
 }
 
+// A rendition stored by the engine (source_artist_media module 1).
+export type ArtistMedia = {
+  sha256: string;
+  content_type: string;
+  width: number;
+  height: number;
+};
 export type ArtistPhoto = {
   url: string;
   source: string;
   credit: string;
   license: string;
   license_url: string;
+  image?: ArtistMedia;
+  thumbnail?: ArtistMedia;
 };
 export type ArtistProfile = {
   artist: string;
@@ -125,8 +134,12 @@ export type ArtistProfile = {
   profile_updated_at?: string;
   profile: null | {
     name: string;
-    musicbrainz_id: string;
-    musicbrainz_url: string;
+    // A profile is bound to MusicBrainz, to the artist's Live Music Archive
+    // collection, or to both.
+    musicbrainz_id?: string | null;
+    musicbrainz_url?: string;
+    archive_collection?: string;
+    archive_url?: string;
     type?: string;
     country?: string;
     area?: { name: string };
