@@ -21,7 +21,8 @@ artist and selected year range.
 
 The shared Arkhiv engine owns `source_discovery` module 1, the read APIs, artist
 profiles and exact retained provider responses. Artist identity is an explicitly
-reviewed MusicBrainz ID bound to a source artist name. No provider search or
+reviewed MusicBrainz ID, the Live Music Archive collection that holds the
+artist's recordings, or both, bound to a source artist name. No provider search or
 metadata fetching runs when a visitor opens a page. An unlinked artist still
 has its recordings and a clear missing-biography state.
 
@@ -32,18 +33,32 @@ omitted. Existing curated photographs remain independent in `artist-images.ts`.
 
 When the engine reports `source_artist_photos` module 1, the frontend loads its
 artist photograph list once. The collection directory, recording rows, recording
-detail and player then show those Commons photographs with their credit and
-license. A curated photograph still wins, and an engine photograph replaces a
-curated logo. Older engines or a failed request leave the curated images alone.
+detail and player then show those photographs with their credit and license.
+
+With `source_artist_media` module 1 the engine stores each photograph itself: a
+display image up to 1280 pixels wide and a 330-pixel thumbnail, re-encoded so
+embedded camera metadata is dropped. Pages load them from
+`/api/source-catalog/v1/artist-media/{sha256}` and make no request to Wikimedia
+or the Internet Archive. A stored image comes first, then a curated photograph,
+then a Commons photograph without a stored copy, then a curated logo. Older
+engines or a failed request leave the curated images alone.
+
+Where Wikipedia and Commons have nothing, a collection-bound profile can use
+the Live Music Archive collection's own item image and page text. They are
+credited to the collection page and are not described as licensed material.
+Generated download notices and taping or permission notes are removed. Text
+shorter than 25 words is dropped, and so is an image shared by three or more
+collections, which is a placeholder.
 
 The operator helper caches metadata for seven days, serializes outbound requests,
 uses an identifying User-Agent, and preserves provider cooldowns. It retains raw
-JSON bytes with timestamps. It never fetches recording audio or image binaries.
+JSON bytes with timestamps. It never fetches recording audio. It downloads only
+the selected photograph, for the engine to store.
 Enrichment does not overwrite source recording metadata or editorial corrections.
 
 ## Compatibility and review
 
-The consumer adopts published core 0.4.3 and retains viewer 0.4.3. The new views check
+The consumer adopts published core 0.4.4 and retains viewer 0.4.3. The new views check
 `source_discovery` capability and show an update notice on older cores, instead
 of sending filters an old engine might ignore. Normal browsing remains usable.
 Use the development-core Compose override with the canonical Arkhiv checkout
