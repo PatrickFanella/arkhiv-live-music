@@ -24,6 +24,9 @@ export default function StreamPlayer({
     <div className="stream-player">
       <audio
         ref={audio}
+        // Volume extensions use Web Audio, which silences cross-origin media
+        // unless it was fetched with CORS. Archive's audio CDN supports CORS.
+        crossOrigin="anonymous"
         src={track.url}
         controls
         {...controls.events}
