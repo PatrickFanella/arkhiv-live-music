@@ -13,7 +13,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@subcult/archive-viewer": "0.4.3",
+    "@subcult/archive-viewer": "0.4.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
