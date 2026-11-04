@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "react-dom/server";
 import BrowseDirectory from "./BrowseDirectory";
-import { emptySearch, readSearch, searchQuery, validateDates } from "./browse";
+import {
+  emptySearch,
+  readPages,
+  readSearch,
+  searchQuery,
+  validateDates,
+} from "./browse";
 
 describe("Catalog browsing", () => {
   it("round trips shared searches including punctuation, dates, and page cursors", () => {
@@ -22,6 +28,15 @@ describe("Catalog browsing", () => {
       artist: "Ween",
     });
     expect(searchQuery(emptySearch)).toBe("");
+  });
+  it("restores visited page cursors from history state and ignores other state", () => {
+    expect(readPages(null)).toEqual([]);
+    expect(readPages({ pages: ["", "show+next="] })).toEqual([
+      "",
+      "show+next=",
+    ]);
+    expect(readPages({ pages: "show+next=" })).toEqual([]);
+    expect(readPages({ pages: [1] })).toEqual([]);
   });
   it("rejects reversed date ranges while allowing single-day and open-ended browsing", () => {
     expect(

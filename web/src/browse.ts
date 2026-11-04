@@ -42,6 +42,15 @@ export function readSearch(query: string): Search {
     search.view = "";
   return search;
 }
+// Cursors of the pages already visited, kept in history.state so Back and
+// Forward restore the page number and tape numbering with the results.
+export function readPages(state: unknown): string[] {
+  const pages = (state as { pages?: unknown } | null)?.pages;
+  return Array.isArray(pages) &&
+    pages.every((page) => typeof page === "string")
+    ? pages
+    : [];
+}
 export function searchQuery(search: Search): string {
   return new URLSearchParams(
     Object.entries(search).filter(([, value]) => value !== ""),

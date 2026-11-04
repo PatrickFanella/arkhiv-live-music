@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "react-dom/server";
-import { calendarCells, monthLength } from "./DateDiscovery";
+import { calendarCells, calendarQuery, monthLength } from "./DateDiscovery";
 import DateDiscovery from "./DateDiscovery";
 import { emptySearch, readSearch, searchQuery, validateDates } from "./browse";
 import { artistProfileImage } from "./artist-images";
@@ -34,6 +34,12 @@ describe("historical date discovery", () => {
     expect(validateDates({ ...search, year_to: "1969" })).not.toBe("");
     expect(validateDates({ ...search, year_to: "" })).not.toBe("");
     expect(readSearch("?view=unknown").view).toBe("");
+  });
+  it("requests the resolved, zero-padded month when the URL omits one", () => {
+    const params = calendarQuery({ ...emptySearch, view: "calendar" }, 5);
+    expect(params.get("month")).toBe("05");
+    expect(params.get("collection")).toBe("etree");
+    expect(params.get("artist")).toBe("");
   });
   it("renders single, range, and all-years controls without requesting providers", () => {
     const html = renderToString(

@@ -15,7 +15,7 @@ repository, package and Compose project keep the `arkhiv-live-music` name.
 
 ## Shared releases
 
-The published viewer pin is 0.4.3 and the engine receipt pins core 0.4.4, including
+The published viewer pin is 0.4.4 and the engine receipt pins core 0.4.4, including
 the source metadata catalog, batch playback reviews and nested audio support from
 [Arkhiv PR 129](https://git.subcult.tv/subculture-collective/arkhiv/pulls/129).
 The engine image uses an immutable registry digest. The viewer retains its

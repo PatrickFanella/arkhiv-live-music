@@ -131,11 +131,25 @@ function MonthPicker({
   );
 }
 
+// The engine rejects an empty month, so the request carries the month the
+// view resolved (the URL's month or the current one), zero-padded.
+export function calendarQuery(search: Search, month: number) {
+  return new URLSearchParams({
+    collection: "etree",
+    month: String(month).padStart(2, "0"),
+    year_from: search.year_from,
+    year_to: search.year_to,
+    artist: search.artist,
+  });
+}
+
 function MonthGrid({
   search,
+  month,
   choose,
 }: {
   search: Search;
+  month: number;
   choose: (day: number) => void;
 }) {
   const [calendar, setCalendar] = useState<ConcertCalendar>();
@@ -143,15 +157,8 @@ function MonthGrid({
   const [retry, setRetry] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
-    const params = new URLSearchParams({
-      collection: "etree",
-      month: search.month,
-      year_from: search.year_from,
-      year_to: search.year_to,
-      artist: search.artist,
-    });
     getJSON<ConcertCalendar>(
-      `/api/source-catalog/v1/calendar?${params}`,
+      `/api/source-catalog/v1/calendar?${calendarQuery(search, month)}`,
       controller.signal,
     )
       .then(setCalendar)
@@ -159,7 +166,7 @@ function MonthGrid({
         if (error.name !== "AbortError") setError(error.message);
       });
     return () => controller.abort();
-  }, [search.month, search.year_from, search.year_to, search.artist, retry]);
+  }, [month, search.year_from, search.year_to, search.artist, retry]);
   if (error)
     return (
       <div role="status">
@@ -175,7 +182,6 @@ function MonthGrid({
       </div>
     );
   if (!calendar) return <p role="status">{copy.loadingCalendar}</p>;
-  const month = Number(search.month);
   const singleYear =
     search.year_from && search.year_from === search.year_to
       ? Number(search.year_from)
@@ -304,8 +310,9 @@ export default function DateDiscovery({
         !onThisDay &&
         available && (
           <MonthGrid
-            key={`${search.month}-${search.year_from}-${search.year_to}-${search.artist}`}
+            key={`${month}-${search.year_from}-${search.year_to}-${search.artist}`}
             search={search}
+            month={month}
             choose={choose}
           />
         )
