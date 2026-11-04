@@ -28,6 +28,8 @@ export const discoveryCopy = {
     "Recordings made on this month and day, across the selected years.",
   updateRequired:
     "This catalog service needs an update before date and artist discovery can load.",
+  publicEngine:
+    "This engine serves the public catalog only; source browsing and discovery need the private engine.",
   noBiography: "A sourced biography is not available for this artist yet.",
   noPhoto: "Artist photograph not available",
   sourceFacts: "Artist information from MusicBrainz",

@@ -14,6 +14,7 @@ import DateDiscovery from "./DateDiscovery";
 import {
   emptySearch,
   filterLabels,
+  readPages,
   readSearch,
   searchQuery,
   validateDates,
@@ -63,11 +64,11 @@ export default function App() {
   const resolution = useRef<AbortController | null>(null);
   useEffect(() => () => resolution.current?.abort(), []);
   useEffect(() => {
-    const restore = () => {
+    const restore = (event: PopStateEvent) => {
       const next = readSearch(window.location.search);
       setDraft(next);
       setSearch(next);
-      setHistory([]);
+      setHistory(readPages(event.state));
       setLoading(true);
       setCatalog(undefined);
       setError("");
@@ -78,6 +79,7 @@ export default function App() {
     return () => window.removeEventListener("popstate", restore);
   }, []);
   const dialog = useRef<HTMLDialogElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
   const results = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (selected && !dialog.current?.open) dialog.current?.showModal();
@@ -108,13 +110,19 @@ export default function App() {
     const controller = new AbortController();
     getJSON<{
       api_version: string;
+      audience?: string;
       collection?: string;
       collections?: string[];
       modules: Record<string, string>;
     }>("/api/version", controller.signal)
       .then((version) => {
-        const available = version.modules.source_discovery === "1";
+        // A public engine advertises source modules but answers every
+        // source-catalog request 404, so the audience gates the inventory.
+        const isPrivate = version.audience === "private";
+        const available =
+          isPrivate && version.modules.source_discovery === "1";
         setSupportsDiscovery(available);
+        if (!isPrivate) throw new Error(discoveryCopy.publicEngine);
         if (
           !available &&
           (search.month_day ||
@@ -200,7 +208,7 @@ export default function App() {
       });
     return () => controller.abort();
   }, [facetRetry]);
-  const changeSearch = (next: Search, push = true) => {
+  const changeSearch = (next: Search, push = true, pages: string[] = []) => {
     const validation = validateDates(next);
     if (validation) {
       setFilterError(validation);
@@ -216,7 +224,7 @@ export default function App() {
     results.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     if (push)
       window.history.pushState(
-        null,
+        { pages },
         "",
         `${window.location.pathname}${searchQuery(next) ? `?${searchQuery(next)}` : ""}`,
       );
@@ -251,7 +259,7 @@ export default function App() {
   const related = (filters: Partial<Search>) => {
     resolution.current?.abort();
     setResolving(false);
-    setSelected("");
+    closeDetail();
     setHistory([]);
     changeSearch({
       ...emptySearch,
@@ -260,9 +268,21 @@ export default function App() {
     });
   };
   const open = (id: string) => {
+    opener.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     setDetail(undefined);
     setDetailError("");
     setSelected(id);
+  };
+  // Close the dialog before it unmounts so focus returns to the tape that
+  // opened it instead of falling back to the document body.
+  const closeDetail = () => {
+    dialog.current?.close();
+    opener.current?.focus();
+    opener.current = null;
+    setSelected("");
   };
   const tracks =
     detail && !detail.unavailable
@@ -304,7 +324,7 @@ export default function App() {
       const url = representationURL(asset, "play");
       if (!controller.signal.aborted) {
         setPlaying({ recording, identifier, tracks: queue, index, url });
-        setSelected("");
+        closeDetail();
       }
     } catch (error) {
       if (!controller.signal.aborted)
@@ -725,8 +745,9 @@ export default function App() {
                 disabled={!history.length || loading}
                 onClick={() => {
                   const cursor = history[history.length - 1];
-                  setHistory(history.slice(0, -1));
-                  changeSearch({ ...search, cursor });
+                  const pages = history.slice(0, -1);
+                  setHistory(pages);
+                  changeSearch({ ...search, cursor }, true, pages);
                 }}
               >
                 ← Previous
@@ -740,8 +761,13 @@ export default function App() {
               <button
                 disabled={!catalog.cursor || !catalog.items.length || loading}
                 onClick={() => {
-                  setHistory([...history, search.cursor]);
-                  changeSearch({ ...search, cursor: catalog.cursor || "" });
+                  const pages = [...history, search.cursor];
+                  setHistory(pages);
+                  changeSearch(
+                    { ...search, cursor: catalog.cursor || "" },
+                    true,
+                    pages,
+                  );
                 }}
               >
                 Next 100 →
@@ -790,7 +816,7 @@ export default function App() {
       {selected && (
         <dialog
           ref={dialog}
-          onCancel={() => setSelected("")}
+          onCancel={closeDetail}
           className="detail-backdrop"
         >
           <section className="recording-detail" aria-label="Recording details">
@@ -801,7 +827,7 @@ export default function App() {
                 onClick={() => {
                   resolution.current?.abort();
                   setResolving(false);
-                  setSelected("");
+                  closeDetail();
                 }}
               >
                 Close ×
