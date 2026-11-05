@@ -8,7 +8,8 @@ immutable Arkhiv core pin; metadata workers, PostgreSQL and media volumes keep
 their independent release and preservation procedures.
 
 The host profile retains Lineage's existing host networking and read-only nginx
-configuration, including loopback listeners and the reviewed local API upstream.
+configuration: the existing LAN listener on `10.0.0.57:3041` and loopback API
+upstream at `127.0.0.1:28347`.
 The image's development nginx proxy uses Docker DNS. CI runs its nginx syntax
 check with networking disabled; deployment retains the production config bind.
 
