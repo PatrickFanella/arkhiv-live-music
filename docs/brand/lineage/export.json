@@ -1,0 +1,79 @@
+{
+  "studio_repository": "subculture-collective/subcult-tv",
+  "studio_revision": "6907e56c181949c1d99064dbc38ae9fe660a66d0",
+  "brand": "lineage",
+  "files": [
+    {
+      "source": "studio/brands/lineage/GUIDE.md",
+      "target": "docs/brand/lineage/GUIDE.md",
+      "sha256": "76931d97f4fe44daa908cb037e4a9918ec7a9fa908efa855ee8111f1c4acb5c8",
+      "transformation": "unchanged copy"
+    },
+    {
+      "source": "studio/brands/lineage/product/readme-lockup.png",
+      "target": "docs/brand/lineage/readme-lockup.png",
+      "sha256": "dde747c528bfed39367d8c8abf5766388cfb567b52e8b155ab3e1b2aee349b5f",
+      "transformation": "unchanged copy"
+    },
+    {
+      "source": "studio/brands/lineage/social/avatar.png",
+      "target": "docs/brand/lineage/avatar.png",
+      "sha256": "6964b0b83b2b53fc721ab53baa745e998142cba9b530b4e834350e373390ddc3",
+      "transformation": "unchanged copy"
+    },
+    {
+      "source": "studio/brands/lineage/product/favicon.svg",
+      "target": "web/public/brand/lineage/favicon.svg",
+      "sha256": "4f8d036705334845c7fc702b40d4ca6e228c2938856e61d419758fcf0477c28c",
+      "transformation": "unchanged copy"
+    },
+    {
+      "source": "studio/brands/lineage/product/favicon.ico",
+      "target": "web/public/brand/lineage/favicon.ico",
+      "sha256": "a5977f7efbcbd2b0b71b2f973d5aee68ac646a005fa67c0c9917c3a69a2d1333",
+      "transformation": "unchanged copy"
+    },
+    {
+      "source": "studio/brands/lineage/product/apple-touch-icon.png",
+      "target": "web/public/brand/lineage/apple-touch-icon.png",
+      "sha256": "dee276c42df5f72ebd1833b8e1e6dcbb09a25cfa8093a4e830a26abc0cebb7ae",
+      "transformation": "unchanged copy"
+    },
+    {
+      "source": "studio/brands/lineage/product/og.png",
+      "target": "web/public/brand/lineage/og.png",
+      "sha256": "35e73e3398e18d59baaf45a5e78087b8ff51f66963168020b3b32e085ecfd5e6",
+      "transformation": "unchanged copy"
+    },
+    {
+      "source": "studio/brands/lineage/product/mark.svg",
+      "target": "web/public/brand/lineage/mark.svg",
+      "sha256": "2b4f5cd6a5dad2fbc5f623a4ebcf99ad2d31352986a70df02a0965c04def1d55",
+      "transformation": "unchanged copy"
+    },
+    {
+      "source": "studio/brands/lineage/product/favicon.svg",
+      "target": "web/public/favicon.svg",
+      "sha256": "4f8d036705334845c7fc702b40d4ca6e228c2938856e61d419758fcf0477c28c",
+      "transformation": "unchanged copy"
+    },
+    {
+      "source": "studio/brands/lineage/product/favicon.ico",
+      "target": "web/public/favicon.ico",
+      "sha256": "a5977f7efbcbd2b0b71b2f973d5aee68ac646a005fa67c0c9917c3a69a2d1333",
+      "transformation": "unchanged copy"
+    },
+    {
+      "source": "studio/brands/lineage/product/apple-touch-icon.png",
+      "target": "web/public/apple-touch-icon.png",
+      "sha256": "dee276c42df5f72ebd1833b8e1e6dcbb09a25cfa8093a4e830a26abc0cebb7ae",
+      "transformation": "unchanged copy"
+    },
+    {
+      "source": "studio/brands/lineage/product/og.png",
+      "target": "web/public/og.png",
+      "sha256": "35e73e3398e18d59baaf45a5e78087b8ff51f66963168020b3b32e085ecfd5e6",
+      "transformation": "unchanged copy"
+    }
+  ]
+}

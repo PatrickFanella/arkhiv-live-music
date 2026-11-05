@@ -1,5 +1,7 @@
 # Lineage
 
+![Lineage identity](docs/brand/lineage/readme-lockup.png)
+
 Live recordings, with their lineage. A Live Music Archive consumer with a shared Arkhiv backend and an independent
 React frontend built with `@subcult/archive-viewer`. Metadata always lives in
 Arkhiv's PostgreSQL database. Audio may stream from the source or be preserved
@@ -206,3 +208,7 @@ operator workflow, with no provider requests during public page reads.
 
 The public address is https://lineage.subcult.tv/. Canonical metadata, Open Graph
 URL, sitemap and robots discovery use this address.
+
+## Brand assets
+
+The product identity and selected public exports are recorded in [the brand handoff](docs/brand/lineage/GUIDE.md) and [source hashes](docs/brand/lineage/export.json). Regenerate from SUBCULT Studio with `python3 studio/scripts/export_remaining_brand.py lineage /path/to/this/repository`; use `--check` to verify the export without writing.
