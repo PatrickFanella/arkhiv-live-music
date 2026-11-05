@@ -212,3 +212,8 @@ URL, sitemap and robots discovery use this address.
 ## Brand assets
 
 The product identity and selected public exports are recorded in [the brand handoff](docs/brand/lineage/GUIDE.md) and [source hashes](docs/brand/lineage/export.json). Regenerate from SUBCULT Studio with `python3 studio/scripts/export_remaining_brand.py lineage /path/to/this/repository`; use `--check` to verify the export without writing.
+
+## Automatic frontend deployment
+
+Verified main builds deploy the public frontend to the existing Dozor service.
+See the [CI deployment and rollback procedure](docs/automatic-frontend-deployment.md).

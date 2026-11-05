@@ -57,3 +57,10 @@ when enabled. `make typecheck` does not emit application files.
 Artist/date discovery requires the adopted `source_discovery` module-1 capability.
 Preserve the published pins and the runtime capability guard. Artist enrichment sources stay independent of recording metadata, and all
 date/artist views must honor source-catalog exclusions.
+
+## Frontend delivery
+
+The native template-check workflow deploys the frontend from verified main.
+Use docs/automatic-frontend-deployment.md for its scoped Dozor profile and rollback.
+Shared-engine pins, metadata workers, media review and acquisition keep their own
+release/operator lanes.
