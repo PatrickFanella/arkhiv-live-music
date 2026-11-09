@@ -28,6 +28,8 @@ function useNarrow() {
 }
 export default function BrowseDirectory({
   open = true,
+  initialDimension = "artists",
+  onDimensionChange,
   facets,
   artistPhotos,
   error,
@@ -35,13 +37,15 @@ export default function BrowseDirectory({
   select,
 }: {
   open?: boolean;
+  initialDimension?: Dimension;
+  onDimensionChange?: (dimension: Dimension) => void;
   facets?: Facets;
   artistPhotos?: ArtistPhotos;
   error: string;
   retry: () => void;
   select: (filters: Partial<Search>) => void;
 }) {
-  const [dimension, setDimension] = useState<Dimension>("artists");
+  const [dimension, setDimension] = useState<Dimension>(initialDimension);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("count");
   const [expanded, setExpanded] = useState(false);
@@ -86,6 +90,7 @@ export default function BrowseDirectory({
                 aria-pressed={dimension === key}
                 onClick={() => {
                   setDimension(key);
+                  onDimensionChange?.(key);
                   setQuery("");
                   setExpanded(false);
                 }}

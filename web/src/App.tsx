@@ -613,7 +613,9 @@ export default function App() {
           </form>
         </section>}
         {view !== "recording" && <BrowseDirectory
-          key={home ? "home" : "narrowed"}
+          key={view === "explore" ? `explore:${search.dimension}` : home ? "home" : "narrowed"}
+          initialDimension={view === "explore" && (search.dimension === "venues" || search.dimension === "years") ? search.dimension : "artists"}
+          onDimensionChange={view === "explore" ? (dimension) => changeSearch({ ...search, dimension }) : undefined}
           open={home || view === "explore"}
           facets={facets}
           artistPhotos={artistPhotos}

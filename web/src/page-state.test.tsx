@@ -34,6 +34,7 @@ describe("shareable root-query pages", () => {
     vi.stubGlobal("window", { location: { search } });
     const html = renderToString(<App />);
     expect(html).toContain(content);
+    if (search.includes("dimension=venues")) expect(html.replace(/<!--.*?-->/g, "")).toContain("Find venues");
     expect(html).toContain('class="masthead"');
     if (search.includes("recording")) expect(html).not.toContain('aria-label="Recording list"');
   });
