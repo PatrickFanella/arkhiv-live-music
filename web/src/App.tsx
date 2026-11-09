@@ -1,6 +1,7 @@
 import { representationURL } from "@subcult/archive-viewer/catalog";
 import type { RepresentationTransport } from "@subcult/archive-viewer/catalog";
 import StreamPlayer from "./StreamPlayer";
+import { trackDisplayTitle } from "./track-title";
 import Artwork from "./Artwork";
 import {
   artistImageFor,
@@ -1023,9 +1024,8 @@ export default function App() {
                         <span className="track-index">
                           {String(index + 1).padStart(2, "0")}
                         </span>
-                        <strong>
-                          {label(track.title) ||
-                            track.name.replace(/\.[^.]+$/, "")}
+                        <strong title={`Original title: ${track.title || "Not recorded"} · File: ${track.name}`}>
+                          {trackDisplayTitle(track)}
                         </strong>
                         <span className="track-length">
                           {track.length || "▶"}
@@ -1034,6 +1034,19 @@ export default function App() {
                     </li>
                   ))}
                 </ol>
+                {tracks.length > 0 && (
+                  <details className="provenance">
+                    <summary>Original track titles and filenames</summary>
+                    <ol>
+                      {tracks.map((track) => (
+                        <li key={track.name}>
+                          <strong>{label(track.title) || "Title not recorded"}</strong>
+                          <div><code>{track.name}</code></div>
+                        </li>
+                      ))}
+                    </ol>
+                  </details>
+                )}
               </>
             )}
           </section>
@@ -1056,7 +1069,9 @@ export default function App() {
             <p className="eyebrow">
               Now playing · {label(playing.recording.metadata.creator)}
             </p>
-            <strong>{label(current.title) || current.name}</strong>
+            <strong title={`Original title: ${current.title || "Not recorded"} · File: ${current.name}`}>
+              {trackDisplayTitle(current)}
+            </strong>
             <p>
               Track {playing.index + 1} of {playing.tracks.length}
             </p>
