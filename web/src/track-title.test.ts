@@ -12,6 +12,9 @@ describe("recorded track display titles", () => {
     [{ name: "t01.mp3", title: "Part II / Jam > Encore?" }, "Part II / Jam > Encore?"],
     [{ name: "gd1977-05-08t01.flac" }, "gd1977-05-08t01.flac"],
     [{ name: "01 - Ocean Man.mp3" }, "Ocean Man"],
+    [{ name: "02 Testify.mp3" }, "Testify"],
+    [{ name: "01 2001_Off The Ground.mp3" }, "2001_Off The Ground"],
+    [{ name: "99 Problems.mp3", title: "99 Problems", track: "99" }, "99 Problems"],
     [{ name: "nested/t01.mp3", title: "  " }, "nested/t01.mp3"],
     [{ name: "t01.mp3", title: ".mp3" }, ".mp3"],
   ])("cleans only supported display evidence: %j", (track, expected) => {
