@@ -16,6 +16,8 @@ export type Search = Record<FilterKey, string> & {
   view: string;
   month: string;
   sort: string;
+  id: string;
+  dimension: string;
 };
 export const emptySearch: Search = {
   q: "",
@@ -29,6 +31,8 @@ export const emptySearch: Search = {
   view: "",
   month: "",
   sort: "",
+  id: "",
+  dimension: "",
   month_day: "",
   year_from: "",
   year_to: "",
@@ -38,7 +42,7 @@ export function readSearch(query: string): Search {
   const search = { ...emptySearch };
   for (const key of Object.keys(search) as (keyof Search)[])
     search[key] = params.get(key) || "";
-  if (!["", "artist", "calendar", "on-this-day"].includes(search.view))
+  if (!["", "artist", "calendar", "on-this-day", "search", "explore", "recording"].includes(search.view))
     search.view = "";
   return search;
 }
@@ -69,4 +73,19 @@ export function validateDates(search: Search): string {
   return search.date_from && search.date_to && search.date_from > search.date_to
     ? "Choose an end date on or after the start date."
     : "";
+}
+
+export function pageView(search: Search) {
+  if (search.view) return search.view;
+  if (search.artist && !search.q) return "artist";
+  return Object.keys(filterLabels).some((key) => search[key as FilterKey]) || search.cursor || search.sort
+    ? "search"
+    : "browse";
+}
+
+// Page identity is not a source-catalog query or a transport permission.
+export function catalogQuery(search: Search): string {
+  const params = new URLSearchParams(searchQuery(search));
+  for (const key of ["view", "id", "dimension"]) params.delete(key);
+  return params.toString();
 }

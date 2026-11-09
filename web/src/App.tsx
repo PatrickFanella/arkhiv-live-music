@@ -14,6 +14,8 @@ import ArtistPage from "./ArtistPage";
 import DateDiscovery from "./DateDiscovery";
 import {
   emptySearch,
+  pageView,
+  catalogQuery,
   filterLabels,
   readPages,
   readSearch,
@@ -37,6 +39,8 @@ export default function App() {
   const [search, setSearch] = useState<Search>(() =>
     readSearch(typeof window === "undefined" ? "" : window.location.search),
   );
+  const view = pageView(search);
+  const routeID = view === "recording" && /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/.test(search.id) ? search.id : "";
   const [supportsDiscovery, setSupportsDiscovery] = useState<boolean>();
   const [artistPhotos, setArtistPhotos] = useState<ArtistPhotos>();
   const [draft, setDraft] = useState<Search>(search);
@@ -50,6 +54,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState("");
+  const detailID = selected || routeID;
   const [detail, setDetail] = useState<Detail>();
   const [detailError, setDetailError] = useState("");
   const [retry, setRetry] = useState(0);
@@ -67,6 +72,10 @@ export default function App() {
   useEffect(() => {
     const restore = (event: PopStateEvent) => {
       const next = readSearch(window.location.search);
+      dialog.current?.close();
+      setSelected("");
+      setDetail(undefined);
+      setDetailError("");
       setDraft(next);
       setSearch(next);
       setHistory(readPages(event.state));
@@ -109,6 +118,10 @@ export default function App() {
   }, []);
   useEffect(() => {
     const controller = new AbortController();
+    if (search.view === "recording" || search.view === "explore") {
+      setLoading(false);
+      return () => controller.abort();
+    }
     getJSON<{
       api_version: string;
       audience?: string;
@@ -150,7 +163,7 @@ export default function App() {
             "The Live Music Archive is unavailable on this catalog service.",
           );
         return getJSON<Catalog>(
-          `/api/source-catalog/v1/items?collection=etree&${searchQuery(search)}`,
+          `/api/source-catalog/v1/items?collection=etree&${catalogQuery(search)}`,
           controller.signal,
         );
       })
@@ -185,10 +198,10 @@ export default function App() {
     };
   }, []);
   useEffect(() => {
-    if (!selected) return;
+    if (!detailID) return;
     const controller = new AbortController();
     getJSON<Detail>(
-      `/api/source-catalog/v1/items/${encodeURIComponent(selected)}?collection=etree`,
+      `/api/source-catalog/v1/items/${encodeURIComponent(detailID)}?collection=etree`,
       controller.signal,
     )
       .then(setDetail)
@@ -196,7 +209,7 @@ export default function App() {
         if (e.name !== "AbortError") setDetailError(e.message);
       });
     return () => controller.abort();
-  }, [selected, retry]);
+  }, [detailID, selected, search, retry]);
   useEffect(() => {
     const controller = new AbortController();
     getJSON<Facets>(
@@ -215,6 +228,10 @@ export default function App() {
       setFilterError(validation);
       return;
     }
+    dialog.current?.close();
+    setSelected("");
+    setDetail(undefined);
+    setDetailError("");
     setFilterError("");
     setCopied("");
     setLoading(true);
@@ -287,7 +304,7 @@ export default function App() {
   };
   const tracks =
     detail && !detail.unavailable
-      ? tracksFor(selected, detail.files || []).filter((track) =>
+      ? tracksFor(detailID, detail.files || []).filter((track) =>
           detail.playback_bindings?.some((binding) =>
             binding.files.includes(track.name),
           ),
@@ -353,6 +370,8 @@ export default function App() {
   const now = new Date();
   const destinations = {
     browse: { ...emptySearch },
+    search: { ...emptySearch, view: "search" },
+    explore: { ...emptySearch, view: "explore", dimension: "artists" },
     calendar: {
       ...emptySearch,
       artist: search.artist,
@@ -370,10 +389,7 @@ export default function App() {
       sort: "date_desc",
     },
   } satisfies Record<string, Search>;
-  const activeView =
-    search.view === "calendar" || search.view === "on-this-day"
-      ? search.view
-      : "browse";
+  const activeView = view === "artist" ? "browse" : view;
   const navigate = (next: Search) => (event: MouseEvent) => {
     if (
       event.button !== 0 ||
@@ -395,7 +411,8 @@ export default function App() {
       (key) => search[key],
     ) ||
     (!!search.artist && !search.view);
-  const home = !search.view && appliedFilters.length === 0;
+  const home = view === "browse";
+  const showCatalog = view !== "explore" && view !== "recording";
   const status = catalog?.status;
   return (
     <div className={`app-shell${playing ? " has-player" : ""}`}>
@@ -414,6 +431,8 @@ export default function App() {
             {(
               [
                 ["browse", discoveryCopy.browse],
+                ["search", discoveryCopy.search],
+                ["explore", discoveryCopy.explore],
                 ["calendar", discoveryCopy.calendar],
                 ["on-this-day", discoveryCopy.onThisDay],
               ] as const
@@ -439,9 +458,7 @@ export default function App() {
         </div>
       </header>
       <main>
-        {search.artist &&
-          search.view !== "calendar" &&
-          search.view !== "on-this-day" && (
+        {search.artist && (view === "artist" || view === "search") && (
             <ArtistPage
               key={search.artist}
               artist={search.artist}
@@ -468,7 +485,7 @@ export default function App() {
             }}
           />
         )}
-        {!search.artist && !search.view && (
+        {home && (
           <div className="intro">
             <p className="eyebrow">Catalog preview · built on Arkhiv</p>
             <h1>{brand.tagline}</h1>
@@ -479,7 +496,23 @@ export default function App() {
             </p>
           </div>
         )}
-        <section
+        {view === "search" && <h1>{discoveryCopy.search}</h1>}
+        {view === "explore" && <h1>{discoveryCopy.explore}</h1>}
+        {view === "recording" && (
+          <section aria-label="Recording page">
+            <p className="eyebrow">{discoveryCopy.recording}</p>
+            <h1>{detail ? label(detail.metadata.title) || routeID : discoveryCopy.recording}</h1>
+            {!routeID ? <p role="alert">{discoveryCopy.invalidRecording}</p> :
+              detailError ? <p role="alert">{detailError}</p> :
+              !detail ? <p role="status">Loading recording…</p> : (
+                <>
+                  <p>{[label(detail.metadata.creator), label(detail.metadata.date), label(detail.metadata.venue)].filter(Boolean).join(" · ")}</p>
+                  <button onClick={() => open(routeID)}>Open recording details and tracks</button>
+                </>
+              )}
+          </section>
+        )}
+        {showCatalog && <section
           aria-label="Recording catalog"
           className={`search-card${home ? "" : " compact"}`}
         >
@@ -579,10 +612,12 @@ export default function App() {
             ))}
             {filterError && <p role="alert">{filterError}</p>}
           </form>
-        </section>
-        <BrowseDirectory
-          key={home ? "home" : "narrowed"}
-          open={home}
+        </section>}
+        {view !== "recording" && <BrowseDirectory
+          key={view === "explore" ? `explore:${search.dimension}` : home ? "home" : "narrowed"}
+          initialDimension={view === "explore" && (search.dimension === "venues" || search.dimension === "years") ? search.dimension : "artists"}
+          onDimensionChange={view === "explore" ? (dimension) => changeSearch({ ...search, dimension }) : undefined}
+          open={home || view === "explore"}
           facets={facets}
           artistPhotos={artistPhotos}
           error={facetError}
@@ -594,10 +629,10 @@ export default function App() {
             if (filters.artist) {
               setHistory([]);
               changeSearch({ ...emptySearch, ...filters, view: "artist" });
-            } else applyFilters(filters);
+            } else applyFilters({ ...filters, ...(view === "explore" ? { view: "search" } : {}) });
           }}
-        />
-        <section aria-label="Recording list" className="catalog">
+        />}
+        {showCatalog && <section aria-label="Recording list" className="catalog">
           <div className="catalog-heading" ref={results}>
             <h2>
               {search.view === "on-this-day"
@@ -775,7 +810,7 @@ export default function App() {
               </button>
             </nav>
           )}
-        </section>
+        </section>}
         <footer>
           <div>
             <p>
