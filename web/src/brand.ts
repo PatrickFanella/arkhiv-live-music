@@ -69,6 +69,14 @@ export const discoveryCopy = {
   weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
 } as const;
 
+export const recordingCopy = {
+  lineageMissing: "Lineage not recorded",
+  sourceMissing: "Source not recorded",
+  setlist: "Setlist",
+  notes: "Notes",
+  readFullNotes: "Read the full notes",
+} as const;
+
 export const playerCopy = {
   placement: "Player position",
   bottom: "Bottom bar",
