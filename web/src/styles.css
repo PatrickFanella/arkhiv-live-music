@@ -318,63 +318,45 @@ main {
 .player-top main {
   padding-bottom: 2.5rem;
 }
-.intro {
-  max-width: 760px;
-  margin-bottom: 0.75rem;
-}
-.intro h1 {
-  font-size: clamp(1.4rem, 2.4vw, 1.85rem);
-  max-width: none;
-}
-.intro p:last-child {
-  font-size: 0.88rem;
-  line-height: 1.4;
-  color: var(--color-ink-soft);
-  max-width: 54ch;
-  margin: 0;
-}
-
-/* ---- Search card --------------------------------------------------------- */
-.search-card {
+/* ---- Search bar ---------------------------------------------------------- */
+/* One line, like a music player's search field: plain at the top of the home
+   view, in a card where other views place it between sections. The label and
+   the help text stay for screen readers only. */
+.search-card.compact {
   background: var(--color-paper-deep);
   border: 1px solid var(--color-rule);
   border-radius: var(--radius-label);
-  padding: 0.75rem 1rem;
-  box-shadow: var(--shadow-card);
+  padding: 0.6rem 1rem;
 }
 .search-bar {
   display: flex;
   gap: 0.5rem;
-  align-items: end;
+  align-items: center;
 }
 .search-bar label {
   flex: 1;
+  min-width: 0;
+}
+.search-bar input {
+  width: 100%;
 }
 .search-bar button {
   flex: none;
 }
 .search-help {
-  margin: 0.4rem 0 0;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  color: var(--color-ink-soft);
-  max-width: 80ch;
-}
-.search-card.compact {
-  padding-block: 0.6rem;
-  box-shadow: none;
-}
-.search-card.compact .search-help {
   display: none;
 }
 .filter-panel {
-  margin-top: 0.6rem;
-  border-top: 1px dashed var(--color-rule-strong);
-  padding-top: 0.5rem;
+  margin-top: 0.4rem;
 }
 .filter-panel > summary {
-  font-size: 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--color-ink-soft);
   width: fit-content;
+}
+.filter-panel[open] > summary {
+  color: var(--color-ink);
 }
 .filter-fields {
   display: grid;
@@ -1852,14 +1834,8 @@ dd {
   main {
     padding-top: 0.75rem;
   }
-  .search-card {
+  .search-card.compact {
     padding: 0.6rem 0.75rem;
-  }
-  .search-bar {
-    flex-wrap: wrap;
-  }
-  .search-bar label {
-    flex-basis: 100%;
   }
   .browse-directory {
     padding-inline: 0.75rem;

@@ -808,17 +808,9 @@ export default function App() {
             }}
           />
         )}
-        {home && (
-          <div className="intro">
-            <p className="eyebrow">Catalog preview · built on Arkhiv</p>
-            <h1>{brand.tagline}</h1>
-            <p>
-              A room, a night, a recording. Search live shows from the Internet
-              Archive’s Live Music Archive by artist, venue and date. Source
-              metadata, corrections and taper lineage stay visible.
-            </p>
-          </div>
-        )}
+        {/* Home opens on the search bar and the On this day row, like a
+            music player; the tagline stays as the page's heading. */}
+        {home && <h1 className="visually-hidden">{brand.tagline}</h1>}
         {view === "search" && <h1>{discoveryCopy.search}</h1>}
         {view === "explore" && <h1>{discoveryCopy.explore}</h1>}
         {view === "recording" && (
@@ -871,7 +863,7 @@ export default function App() {
           <form onSubmit={submit} className="catalog-filters">
             <div className="search-bar">
               <label>
-                Search the catalog
+                <span className="visually-hidden">Search the catalog</span>
                 <input
                   value={draft.q}
                   onChange={(e) => editFilter("q", e.target.value)}

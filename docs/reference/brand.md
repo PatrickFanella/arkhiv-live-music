@@ -77,10 +77,14 @@ fine pointer and 2.75rem on touch screens.
   and below the views become a fixed tab bar with icons and short labels
   (Browse, Search, Explore, Calendar, On this day); the full label stays the
   link's accessible name. The player keeps clear of both.
-- **Search card:** `paper-deep` surface, primary `Find shows` button, dashed
-  rule above the filter disclosure. The disclosure opens when a filter it
-  holds is applied. Outside the home view the card is compact.
-- **On this day row:** on the unfiltered home view, between the search card and
+- **Search bar:** one line with the field and the primary `Find shows`
+  button, at every width, and the filter disclosure in small text below. The
+  field's label and help text are for screen readers only. The disclosure
+  opens when a filter it holds is applied. The home view has no visible
+  headline or introduction: it opens on the plain search bar, and the tagline
+  is its screen-reader heading. Other views place the bar between sections, so
+  there it sits on a `paper-deep` card.
+- **On this day row:** on the unfiltered home view, between the search bar and
   the collection directory, a horizontally scrolling row of square covers for
   recordings made on today's month and day, one per artist, newest first (up to
   ten), with the total and a **See all** link to the On this day view. A card
@@ -94,7 +98,7 @@ fine pointer and 2.75rem on touch screens.
   smaller show only the artist's first letter or digit, skipping a leading
   "The".
 - **Collection directory:** separate `paper-raised` disclosure below the
-  search card, open on the unfiltered home view below 1024px (wider windows
+  search bar, open on the unfiltered home view below 1024px (wider windows
   list the top artists in the sidebar, so it starts closed there). It previews 12
   suggestions, or 6 at the 480px single-column breakpoint.
 - **Tape shelf:** heading with monospace count and share link, removable
