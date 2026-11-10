@@ -12,6 +12,7 @@ import { recordingArtwork } from "./artwork";
 import BrowseDirectory from "./BrowseDirectory";
 import ArtistPage from "./ArtistPage";
 import DateDiscovery from "./DateDiscovery";
+import RecordingContent from "./RecordingContent";
 import {
   emptySearch,
   pageView,
@@ -942,38 +943,13 @@ export default function App() {
                     </button>
                   )}
                 </div>
-                {label(detail.metadata.description) && (
-                  <p className="recording-notes">
-                    {label(detail.metadata.description)}
-                  </p>
-                )}
                 {detail.unavailable && (
                   <p role="status" className="notice">
                     This source was unavailable at the last import. Its catalog
                     metadata is retained.
                   </p>
                 )}
-                <dl>
-                  {[
-                    "date",
-                    "venue",
-                    "coverage",
-                    "source",
-                    "taper",
-                    "transferer",
-                    "subject",
-                    "lineage",
-                    "songs",
-                  ].map(
-                    (key) =>
-                      label(detail.metadata[key]) && (
-                        <div key={key}>
-                          <dt>{key}</dt>
-                          <dd>{label(detail.metadata[key])}</dd>
-                        </div>
-                      ),
-                  )}
-                </dl>
+                <RecordingContent detail={detail} />
                 <a
                   href={`https://archive.org/details/${encodeURIComponent(selected)}`}
                   target="_blank"

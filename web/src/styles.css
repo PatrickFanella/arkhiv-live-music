@@ -753,10 +753,32 @@ footer p {
   color: var(--color-ink-soft);
 }
 .recording-notes {
-  white-space: pre-wrap;
   background: var(--color-paper-deep);
   padding: 1rem;
   border-radius: var(--radius-label);
+}
+.recording-text {
+  margin: 0 0 0.75rem;
+  white-space: pre-line;
+}
+.recording-text:last-child {
+  margin-bottom: 0;
+}
+.recording-text > strong {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+.recording-text.set {
+  padding-top: 0.6rem;
+  border-top: 1px dotted var(--color-rule);
+}
+.recording-more > summary {
+  cursor: pointer;
+  margin-bottom: 0.75rem;
+}
+.recording-field-text {
+  overflow-wrap: anywhere;
 }
 .related-browse {
   display: flex;

@@ -9,3 +9,4 @@ Use this section for durable technical references:
 - Integration notes
 
 Keep exploratory notes in `docs/research/` until they become stable references.
+- [Recording content](recording-content.md): how notes, source and lineage are selected and rendered.
