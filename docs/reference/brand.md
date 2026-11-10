@@ -68,10 +68,15 @@ fine pointer and 2.75rem on touch screens.
   the recording panel and the top of the player. Do not use it elsewhere.
 - **Layout:** masthead, page and footer share one content column
   (`min(1440px, 100% - 2 × gutter)`), so their left and right edges align.
-- **Masthead:** wordmark left, primary navigation (Browse recordings, Concert
-  calendar, On this day) as links beside it, source credit right, hairline
-  below. The current view is ink-filled. Below 900px the navigation moves to
-  its own row and scrolls sideways.
+- **Navigation:** laid out like a music player. From 1024px wide the masthead is
+  a fixed sidebar: wordmark, the five views (Browse recordings, Search
+  recordings, Explore the collection, Concert calendar, On this day) with stroke
+  icons, the eight artists with the most recordings, and the source credit at
+  the foot. The current view is ink-filled. Between 651px and 1023px it is a
+  top bar whose navigation wraps to its own row and scrolls sideways. At 650px
+  and below the views become a fixed tab bar with icons and short labels
+  (Browse, Search, Explore, Calendar, On this day); the full label stays the
+  link's accessible name. The player keeps clear of both.
 - **Search card:** `paper-deep` surface, primary `Find shows` button, dashed
   rule above the filter disclosure. The disclosure opens when a filter it
   holds is applied. Outside the home view the card is compact.

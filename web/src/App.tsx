@@ -3,6 +3,7 @@ import type { RepresentationTransport } from "@subcult/archive-viewer/catalog";
 import StreamPlayer from "./StreamPlayer";
 import { trackDisplayTitle } from "./track-title";
 import Artwork from "./Artwork";
+import NavIcon from "./NavIcon";
 import {
   artistImageFor,
   artistPhotosFrom,
@@ -680,23 +681,57 @@ export default function App() {
           <nav className="primary-nav" aria-label="Explore recordings">
             {(
               [
-                ["browse", discoveryCopy.browse],
-                ["search", discoveryCopy.search],
-                ["explore", discoveryCopy.explore],
-                ["calendar", discoveryCopy.calendar],
-                ["on-this-day", discoveryCopy.onThisDay],
+                ["browse", discoveryCopy.browse, discoveryCopy.browseShort],
+                ["search", discoveryCopy.search, discoveryCopy.searchShort],
+                ["explore", discoveryCopy.explore, discoveryCopy.exploreShort],
+                ["calendar", discoveryCopy.calendar, discoveryCopy.calendarShort],
+                ["on-this-day", discoveryCopy.onThisDay, discoveryCopy.onThisDay],
               ] as const
-            ).map(([key, text]) => (
+            ).map(([key, text, short]) => (
               <a
                 key={key}
                 href={`/${searchQuery(destinations[key]) ? `?${searchQuery(destinations[key])}` : ""}`}
                 aria-current={activeView === key ? "page" : undefined}
                 onClick={navigate(destinations[key], key === "browse" ? "top" : "heading")}
               >
-                {text}
+                <NavIcon name={key} />
+                <span className="nav-long">{text}</span>
+                <span className="nav-short" aria-hidden="true">
+                  {short}
+                </span>
               </a>
             ))}
           </nav>
+          {facets && facets.artists.length > 0 && (
+            <nav className="sidebar-artists" aria-label={discoveryCopy.topArtists}>
+              <p className="eyebrow">{discoveryCopy.topArtists}</p>
+              {[...facets.artists]
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 8)
+                .map((artist) => {
+                const next = { ...emptySearch, artist: artist.value, view: "artist" };
+                return (
+                  <a
+                    key={artist.value}
+                    href={`/?${searchQuery(next)}`}
+                    aria-current={
+                      view === "artist" && search.artist === artist.value
+                        ? "page"
+                        : undefined
+                    }
+                    onClick={navigate(next, "heading")}
+                  >
+                    <Artwork
+                      artist={artistImageFor(artist.value, artistPhotos)}
+                      name={artist.value}
+                    />
+                    <span className="sidebar-artist-name">{artist.value}</span>
+                    <small>{artist.count.toLocaleString()}</small>
+                  </a>
+                );
+              })}
+            </nav>
+          )}
           <a
             className="source-link"
             href={brand.collectionURL}

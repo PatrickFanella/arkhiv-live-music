@@ -12,8 +12,13 @@ export const brand = {
 
 export const discoveryCopy = {
   browse: "Browse recordings",
+  browseShort: "Browse",
   search: "Search recordings",
+  searchShort: "Search",
   explore: "Explore the collection",
+  exploreShort: "Explore",
+  calendarShort: "Calendar",
+  topArtists: "Top artists",
   recording: "Recording",
   invalidRecording: "Choose a valid recording identifier.",
   recordingMissing:
