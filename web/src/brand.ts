@@ -87,6 +87,7 @@ export const playerCopy = {
   showDetails: "Details",
   hideDetails: "Hide details",
   details: "Playing recording details",
+  resize: "Resize player sidebar",
   bottom: "Bottom bar",
   top: "Top bar",
   mini: "Floating mini",

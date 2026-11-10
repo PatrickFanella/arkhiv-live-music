@@ -52,15 +52,22 @@ placeholders only.
 | `--font-mono` | IBM Plex Mono, SFMono-Regular, Cascadia Mono, Menlo, Consolas, Liberation Mono | wordmark, eyebrows, labels, dates, counters, status |
 
 No web fonts are loaded. Headline: 700 weight, tight leading, negative
-tracking, maximum 14 characters per line. Labels: 0.72rem, uppercase,
+tracking, maximum 28 characters per line. Labels: 0.72rem, uppercase,
 0.08–0.14em tracking.
+
+## Density
+
+Lineage is laid out like a music player: dense rows, small controls and short
+vertical gaps. The root size is 93.75% of the reader's own default, so zoom and
+text-size settings still apply. Buttons and fields are about 2.1rem tall with a
+fine pointer and 2.75rem on touch screens.
 
 ## Components
 
 - **Stripes:** 6px three-color bar at the top of the page, the left edge of
   the recording panel and the top of the player. Do not use it elsewhere.
 - **Layout:** masthead, page and footer share one content column
-  (`min(1200px, 100% - 2 × gutter)`), so their left and right edges align.
+  (`min(1440px, 100% - 2 × gutter)`), so their left and right edges align.
 - **Masthead:** wordmark left, primary navigation (Browse recordings, Concert
   calendar, On this day) as links beside it, source credit right, hairline
   below. The current view is ink-filled. Below 900px the navigation moves to
@@ -73,8 +80,10 @@ tracking, maximum 14 characters per line. Labels: 0.72rem, uppercase,
   suggestions, or 6 at the 480px single-column breakpoint.
 - **Tape shelf:** heading with monospace count and share link, removable
   filter chips below, then a 2px ink rule, hairline rows, red monospace
-  counter, monospace date on the right, arrow nudges on hover. On small
-  screens the date moves under the place line.
+  counter, monospace date on the right, arrow nudges on hover. When the list
+  is at least 860px wide each row is one line, with artist, title and place as
+  columns and long text cut short (the title keeps a tooltip). Narrower lists
+  stack them, and on small screens the date moves under the place line.
 - **Footer:** credits left, monospace import status right. Zero counts are
   omitted.
 - **Recording panel:** right-side dialog with the stripe on its left edge and
