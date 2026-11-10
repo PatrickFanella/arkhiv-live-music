@@ -68,3 +68,10 @@ export const discoveryCopy = {
   dateRecordings: "Recordings by date",
   weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
 } as const;
+
+export const playerCopy = {
+  placement: "Player position",
+  bottom: "Bottom bar",
+  top: "Top bar",
+  mini: "Floating mini",
+} as const;

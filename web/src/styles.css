@@ -298,7 +298,10 @@ main {
   padding: 2.5rem 0 4rem;
 }
 .has-player main {
-  padding-bottom: 10rem;
+  padding-bottom: calc(var(--player-height, 10rem) + 2rem);
+}
+.player-top main {
+  padding-bottom: 4rem;
 }
 .intro {
   max-width: 760px;
@@ -870,6 +873,62 @@ dd {
     )
     1;
 }
+/* The player keeps one place in the document; the shell reorders around it. */
+.app-shell.player-top {
+  display: flex;
+  flex-direction: column;
+}
+.player-top .masthead {
+  order: 1;
+}
+.player-top .player {
+  order: 2;
+}
+.player-top main {
+  order: 3;
+}
+.player.top {
+  position: sticky;
+  top: 0;
+  bottom: auto;
+  border-top: 0;
+  border-bottom: 6px solid;
+}
+.player.mini {
+  left: auto;
+  right: 1rem;
+  bottom: 1rem;
+  width: min(360px, 100vw - 2rem);
+  padding: 0.75rem;
+}
+.player.mini .artwork {
+  display: none;
+}
+.player.mini .player-placement span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.player.mini .stream-player {
+  width: 100%;
+}
+.player-placement {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+}
+.player-placement select {
+  background: transparent;
+  color: var(--color-paper);
+  border-color: var(--color-paper);
+}
+.player-placement option {
+  color: var(--color-ink);
+}
 .player-meta {
   flex: 1;
   min-width: 180px;
@@ -1194,9 +1253,6 @@ dd {
   .tape > .tape-number {
     padding-top: 0.2rem;
   }
-  .has-player main {
-    padding-bottom: 16rem;
-  }
   .tape-date {
     grid-column: 3;
   }
@@ -1228,6 +1284,9 @@ dd {
   .stream-player {
     width: 100%;
     order: 3;
+  }
+  .player.top .artwork {
+    display: none;
   }
   .track-heading {
     flex-wrap: wrap;

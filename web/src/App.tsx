@@ -28,7 +28,9 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
 import { getJSON, label, tracksFor } from "./archive";
 import type { Detail, Recording, Track, ImportStatus, Facets } from "./archive";
-import { brand, discoveryCopy } from "./brand";
+import { brand, discoveryCopy, playerCopy } from "./brand";
+import { placements, readPlacement, writePlacement } from "./player-placement";
+import type { Placement } from "./player-placement";
 
 type Catalog = {
   items: Recording[];
@@ -67,6 +69,30 @@ export default function App() {
     index: number;
     url: string;
   }>();
+  const [placement, setPlacement] = useState<Placement>(readPlacement);
+  const shell = useRef<HTMLDivElement>(null);
+  const dock = useRef<HTMLElement>(null);
+  const hasPlayer = !!playing;
+  // Placement only changes classes on the same player, so the audio element and
+  // its playback state are untouched. Layout follows the player's measured size.
+  useEffect(() => {
+    const root = shell.current;
+    const player = dock.current;
+    if (!root || !player) return;
+    const measure = () => {
+      const height = `${player.getBoundingClientRect().height}px`;
+      root.style.setProperty("--player-height", height);
+      root.style.setProperty("--scroll-offset", placement === "top" ? height : "0px");
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(player);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--player-height");
+      root.style.removeProperty("--scroll-offset");
+    };
+  }, [placement, hasPlayer]);
   const [playError, setPlayError] = useState("");
   const [resolving, setResolving] = useState(false);
   const resolution = useRef<AbortController | null>(null);
@@ -481,7 +507,10 @@ export default function App() {
   const showCatalog = view !== "explore" && view !== "recording";
   const status = catalog?.status;
   return (
-    <div className={`app-shell${playing ? " has-player" : ""}`}>
+    <div
+      ref={shell}
+      className={`app-shell${playing ? ` has-player player-${placement}` : ""}`}
+    >
       <div className="stripes" aria-hidden="true" />
       <header className="masthead">
         <div className="masthead-inner">
@@ -1166,7 +1195,11 @@ export default function App() {
         </dialog>
       )}
       {playing && current && (
-        <aside className="player" aria-label="Audio player">
+        <aside
+          ref={dock}
+          className={`player ${placement}`}
+          aria-label="Audio player"
+        >
           <Artwork
             recording={recordingArtwork(
               playing.identifier,
@@ -1196,6 +1229,23 @@ export default function App() {
             onEnded={advance}
           />
           <div className="player-actions">
+            <label className="player-placement">
+              <span>{playerCopy.placement}</span>
+              <select
+                value={placement}
+                onChange={(event) => {
+                  const next = event.target.value as Placement;
+                  setPlacement(next);
+                  writePlacement(next);
+                }}
+              >
+                {placements.map((option) => (
+                  <option key={option} value={option}>
+                    {playerCopy[option]}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button
               onClick={advance}
               disabled={
