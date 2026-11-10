@@ -17,6 +17,10 @@ describe("recorded track display titles", () => {
     [{ name: "99 Problems.mp3", title: "99 Problems", track: "99" }, "99 Problems"],
     [{ name: "nested/t01.mp3", title: "  " }, "nested/t01.mp3"],
     [{ name: "t01.mp3", title: ".mp3" }, ".mp3"],
+    [{ name: "03%20Don%27t%20Stop.mp3" }, "Don't Stop"],
+    [{ name: "t02.mp3", title: "Rock%20%26%20Roll", track: "2" }, "Rock & Roll"],
+    [{ name: "t03.mp3", title: "100% Fun" }, "100% Fun"],
+    [{ name: "t04.mp3", title: "Line%0Abreak" }, "Line%0Abreak"],
   ])("cleans only supported display evidence: %j", (track, expected) => {
     const before = { ...track };
     expect(trackDisplayTitle(track)).toBe(expected);

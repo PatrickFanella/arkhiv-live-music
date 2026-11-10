@@ -67,6 +67,21 @@ describe("retained recording text", () => {
     expect(blocks[0].spans.at(-1)).toEqual({ text: "." });
   });
 
+  it("shows percent-escaped links as readable text and keeps the exact target", () => {
+    const blocks = textBlocks(
+      'Venue: https://en.wikipedia.org/wiki/T.T._the_Bear%27s_Place<br><a href="https://example.org/Caf%C3%A9">https://example.org/Caf%C3%A9</a> and https://example.org/50%zz',
+    );
+    const links = blocks.flatMap((block) => block.spans).filter((span) => span.href);
+    expect(links).toEqual([
+      {
+        text: "https://en.wikipedia.org/wiki/T.T._the_Bear's_Place",
+        href: "https://en.wikipedia.org/wiki/T.T._the_Bear%27s_Place",
+      },
+      { text: "https://example.org/Café", href: "https://example.org/Caf%C3%A9" },
+      { text: "https://example.org/50%zz", href: "https://example.org/50%zz" },
+    ]);
+  });
+
   it("recognizes explicit set and encore boundaries at line starts only", () => {
     const blocks = textBlocks(
       "<b>Set 1:</b> Voodoo> Bertha<br>Set II<br>Eyes<br>E: Wolfman<br>Encore<br>Ripple<br>the set one was cut",
