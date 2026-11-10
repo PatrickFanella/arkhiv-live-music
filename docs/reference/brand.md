@@ -84,6 +84,13 @@ fine pointer and 2.75rem on touch screens.
   is at least 860px wide each row is one line, with artist, title and place as
   columns and long text cut short (the title keeps a tooltip). Narrower lists
   stack them, and on small screens the date moves under the place line.
+  Above the rows, **Filter this page** narrows the loaded page (every word must
+  match the artist, recording, venue, place or date; case and accents are
+  ignored), and the column headings sort it: first click ascending (dates
+  newest first), second reversed, third back to catalog order. Row numbers keep
+  their catalog position. **Order** sorts the whole catalog through the
+  engine: catalog order, or newest first, which leaves out recordings without
+  a complete date. The deployed engine offers no other catalog-wide order.
 - **Footer:** credits left, monospace import status right. Zero counts are
   omitted.
 - **Recording panel:** right-side dialog with the stripe on its left edge and

@@ -34,7 +34,7 @@ import type { CSSProperties, FormEvent, KeyboardEvent, MouseEvent } from "react"
 import { getJSON, label, missingItemMessage, tracksFor } from "./archive";
 import { catalogData } from "./catalog-data";
 import type { Detail, Recording, Track, ImportStatus, Facets } from "./archive";
-import { brand, discoveryCopy, playerCopy } from "./brand";
+import { brand, discoveryCopy, playerCopy, shelfCopy } from "./brand";
 import {
   clampRail,
   isRail,
@@ -48,6 +48,8 @@ import {
   writeRailWidth,
 } from "./player-placement";
 import type { Placement } from "./player-placement";
+import { arrangeShelf, nextSort, shelfColumns } from "./shelf-order";
+import type { ShelfColumn, ShelfSort } from "./shelf-order";
 
 type Catalog = {
   items: Recording[];
@@ -76,6 +78,10 @@ export default function App() {
   const view = pageView(search);
   const routeID = view === "recording" && /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/.test(search.id) ? search.id : "";
   const [supportsDiscovery, setSupportsDiscovery] = useState<boolean>();
+  // Sorting and filtering the loaded page stay in this view; the catalog
+  // order in the search covers every page.
+  const [shelfFilter, setShelfFilter] = useState("");
+  const [shelfSort, setShelfSort] = useState<ShelfSort>();
   const [artistPhotos, setArtistPhotos] = useState<ArtistPhotos>();
   const [draft, setDraft] = useState<Search>(search);
   const [facets, setFacets] = useState<Facets>();
@@ -630,6 +636,30 @@ export default function App() {
   const home = view === "browse";
   const showCatalog = view !== "explore" && view !== "recording";
   const status = catalog?.status;
+  const shelfRows = arrangeShelf(catalog?.items ?? [], shelfFilter, shelfSort);
+  const sortButton = (column: ShelfColumn) => {
+    const active = shelfSort?.column === column;
+    const direction = active
+      ? shelfSort.descending
+        ? shelfCopy.descending
+        : shelfCopy.ascending
+      : "";
+    return (
+      <button
+        key={column}
+        type="button"
+        className="sort-button"
+        aria-pressed={active}
+        aria-label={shelfCopy.sortBy(shelfCopy.columns[column], direction)}
+        onClick={() => setShelfSort(nextSort(shelfSort, column))}
+      >
+        {shelfCopy.columns[column]}
+        <span aria-hidden="true">
+          {active ? (shelfSort.descending ? " ↓" : " ↑") : ""}
+        </span>
+      </button>
+    );
+  };
   return (
     <div
       ref={shell}
@@ -995,12 +1025,71 @@ export default function App() {
                 : "No recordings match. Try another artist, venue or year."}
             </p>
           )}
+          {catalog && catalog.items.length > 0 && (
+            <div className="shelf-tools">
+              <label className="shelf-filter">
+                <span className="visually-hidden">{shelfCopy.filterLabel}</span>
+                <input
+                  type="search"
+                  value={shelfFilter}
+                  placeholder={shelfCopy.filterPlaceholder}
+                  onChange={(event) => setShelfFilter(event.target.value)}
+                />
+              </label>
+              {supportsDiscovery &&
+                search.view !== "calendar" &&
+                search.view !== "on-this-day" && (
+                  <label className="shelf-order">
+                    <span>{shelfCopy.order}</span>
+                    <select
+                      value={search.sort === "date_desc" ? "date_desc" : ""}
+                      onChange={(event) =>
+                        applyFilters({ sort: event.target.value })
+                      }
+                    >
+                      <option value="">{shelfCopy.catalogOrder}</option>
+                      <option value="date_desc">{shelfCopy.newestFirst}</option>
+                    </select>
+                  </label>
+                )}
+              <span className="shelf-count" role="status">
+                {shelfFilter.trim() || shelfSort
+                  ? shelfCopy.shown(shelfRows.length, catalog.items.length)
+                  : ""}
+              </span>
+            </div>
+          )}
+          {catalog && catalog.items.length > 0 && shelfRows.length === 0 && (
+            <div className="notice">
+              <p>{shelfCopy.noMatch(shelfFilter.trim())}</p>
+              <button onClick={() => setShelfFilter("")}>
+                {shelfCopy.clearFilter}
+              </button>
+            </div>
+          )}
           <div className="tape-list">
-            {catalog?.items.map((recording, index) => (
+            {catalog && catalog.items.length > 0 && (
+              <div className="tape-head">
+                <span className="tape-number" aria-hidden="true">
+                  #
+                </span>
+                <span aria-hidden="true" />
+                <span className="tape-head-info">
+                  {shelfColumns
+                    .filter((column) => column !== "date")
+                    .map((column) => sortButton(column))}
+                </span>
+                {sortButton("date")}
+                <span aria-hidden="true" />
+              </div>
+            )}
+            {shelfRows.map(({ recording, index }, position) => (
               <Fragment key={recording.identifier}>
                 {search.sort === "date_desc" &&
-                  (index === 0 ||
-                    label(catalog.items[index - 1].date).slice(0, 4) !==
+                  !shelfSort &&
+                  !shelfFilter.trim() &&
+                  (position === 0 ||
+                    label(shelfRows[position - 1].recording.date).slice(0, 4) !==
                       label(recording.date).slice(0, 4)) && (
                     <h3 className="recording-year">
                       {label(recording.date).slice(0, 4)}
