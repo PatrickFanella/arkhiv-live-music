@@ -33,7 +33,11 @@ export function readableEscapes(text: string): string {
   return text.replace(/(?:%[0-9a-f]{2})+/gi, (run) => {
     try {
       const decoded = decodeURIComponent(run);
-      return /[\u0000-\u001f\u007f]/.test(decoded) ? run : decoded;
+      const control = [...decoded].some((character) => {
+        const code = character.charCodeAt(0);
+        return code < 32 || code === 127;
+      });
+      return control ? run : decoded;
     } catch {
       return run;
     }
