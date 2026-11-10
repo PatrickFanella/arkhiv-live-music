@@ -18,3 +18,13 @@ chosen side, so the masthead, page and footer reflow beside the rail instead of
 under it. In narrower windows the player shows the bottom bar while the saved
 sidebar choice stays selected; widening the window restores the rail. A long queue
 or name scrolls inside the rail.
+
+## The playing recording
+
+Every placement has **Open recording page**, which opens the recording that is
+playing, not one being inspected in the side panel. **Details** expands the same
+recording's notes, source, lineage and track list inside the player without
+navigating. A track chosen there plays through the existing queue and resolver.
+**Close** or Escape collapses it and returns focus to **Details**. Long notes and
+track lists scroll inside the disclosure, which is capped at half the window; in
+a rail it fills the rail's remaining height.

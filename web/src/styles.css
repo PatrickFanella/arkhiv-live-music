@@ -1022,6 +1022,14 @@ dd {
     flex-direction: column;
     align-items: stretch;
   }
+  /* In a rail the details take the remaining height and scroll there. */
+  .player.left .player-details,
+  .player.right .player-details {
+    flex: 1 1 auto;
+    min-height: 12rem;
+    max-height: none;
+    margin-inline: -0.5rem;
+  }
 }
 .player-placement {
   display: inline-flex;
@@ -1075,6 +1083,70 @@ dd {
 }
 .player [role="alert"] {
   color: var(--color-stripe-mustard);
+}
+.player-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+}
+.player-links a {
+  color: var(--color-paper);
+}
+.player-links button {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.78rem;
+}
+/* The playing recording's details sit on paper inside the player, so long
+   notes and tracklists scroll here in every placement. */
+.player-details {
+  flex: 1 0 100%;
+  max-height: min(50vh, 32rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 1rem 1rem;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border-radius: var(--radius-label);
+}
+.player-details-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 -1rem;
+  padding: 0.6rem 1rem;
+  background: var(--color-paper);
+  border-bottom: 1px solid var(--color-rule);
+}
+.player .player-details p {
+  font-size: 0.85rem;
+}
+.player-details-head button {
+  white-space: nowrap;
+}
+.player .player-details button {
+  color: var(--color-ink);
+  border-color: var(--color-ink);
+}
+.player .player-details .tracks button {
+  border-color: var(--color-rule);
+}
+.player .player-details button:hover:not(:disabled) {
+  background: var(--color-paper-deep);
+  color: var(--color-ink);
+}
+.player-details h3 {
+  margin-top: 1.25rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid var(--color-ink);
+}
+.tracks button[aria-current] strong {
+  font-weight: 600;
 }
 
 /* ---- Artwork ------------------------------------------------------------- */

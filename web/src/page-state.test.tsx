@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderToString } from "react-dom/server";
 import App from "./App";
-import RecordingDetail from "./RecordingDetail";
+import RecordingDetail, { TrackList } from "./RecordingDetail";
 import { tracksFor } from "./archive";
 import type { Detail } from "./archive";
 import { catalogQuery, emptySearch, pageView, readSearch, recordingPage, searchQuery } from "./browse";
@@ -83,5 +83,22 @@ describe("dedicated recording page", () => {
     for (const text of ["Ween Live at Roseland", "Second night.", "Schoeps MK4", "DAT &gt; CD &gt; FLAC", "Original metadata snapshot", "1 playable tracks", "Open recording page", "More by Ween"])
       expect(html).toContain(text);
     expect(html).toContain("/api/source-catalog/v1/items/ween1996/source?collection=etree");
+  });
+});
+
+describe("playing recording track list", () => {
+  it("marks the playing track and keeps original titles and files", () => {
+    const tracks = tracksFor("show", [
+      { name: "01 Intro.mp3", title: "01 Intro (Live)" },
+      { name: "02 Song.mp3", title: "Song" },
+    ]);
+    const html = renderToString(
+      <TrackList tracks={tracks} current={1} play={() => {}} />,
+    ).replace(/<!-- -->/g, "");
+    expect(html.match(/aria-current="true"/g)).toHaveLength(1);
+    expect(html).toMatch(/aria-current="true"><span class="track-index">02/);
+    expect(html).toContain("Playing");
+    expect(html).toContain("Original title: 01 Intro (Live) · File: 01 Intro.mp3");
+    expect(html).toContain("<code>02 Song.mp3</code>");
   });
 });
