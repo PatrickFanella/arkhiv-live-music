@@ -27,6 +27,7 @@ import type { FilterKey, Reveal, Search } from "./browse";
 import { Fragment, useEffect, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
 import { getJSON, label, tracksFor } from "./archive";
+import { catalogData } from "./catalog-data";
 import type { Detail, Recording, Track, ImportStatus, Facets } from "./archive";
 import { brand, discoveryCopy, playerCopy } from "./brand";
 import { placements, readPlacement, writePlacement } from "./player-placement";
@@ -152,13 +153,11 @@ export default function App() {
   // leaves the curated images in place.
   useEffect(() => {
     const controller = new AbortController();
-    getJSON<{ modules: Record<string, string> }>(
-      "/api/version",
-      controller.signal,
-    )
+    catalogData
+      .capabilities(controller.signal)
       .then((version) =>
         version.modules.source_artist_photos === "1"
-          ? getJSON<{ artists: Parameters<typeof artistPhotosFrom>[0] }>(
+          ? catalogData.read<{ artists: Parameters<typeof artistPhotosFrom>[0] }>(
               "/api/source-catalog/v1/artist-photos?collection=etree",
               controller.signal,
             )
@@ -176,13 +175,8 @@ export default function App() {
       setLoading(false);
       return () => controller.abort();
     }
-    getJSON<{
-      api_version: string;
-      audience?: string;
-      collection?: string;
-      collections?: string[];
-      modules: Record<string, string>;
-    }>("/api/version", controller.signal)
+    catalogData
+      .capabilities(controller.signal)
       .then((version) => {
         // A public engine advertises source modules but answers every
         // source-catalog request 404, so the audience gates the inventory.
@@ -216,12 +210,14 @@ export default function App() {
           throw new Error(
             "The Live Music Archive is unavailable on this catalog service.",
           );
-        return getJSON<Catalog>(
+        return catalogData.read<Catalog>(
           `/api/source-catalog/v1/items?collection=etree&${catalogQuery(search)}`,
           controller.signal,
         );
       })
-      .then(setCatalog)
+      .then((page) => {
+        if (!controller.signal.aborted) setCatalog(page);
+      })
       .catch((e: Error) => {
         if (e.name !== "AbortError") setError(e.message);
       })
@@ -266,11 +262,14 @@ export default function App() {
   }, [detailID, selected, search, retry]);
   useEffect(() => {
     const controller = new AbortController();
-    getJSON<Facets>(
-      "/api/source-catalog/v1/facets?collection=etree",
-      controller.signal,
-    )
-      .then(setFacets)
+    catalogData
+      .read<Facets>(
+        "/api/source-catalog/v1/facets?collection=etree",
+        controller.signal,
+      )
+      .then((next) => {
+        if (!controller.signal.aborted) setFacets(next);
+      })
       .catch((error: Error) => {
         if (error.name !== "AbortError") setFacetError(error.message);
       });
@@ -824,7 +823,12 @@ export default function App() {
           {error && (
             <div role="alert" className="notice">
               <p>{error}</p>
-              <button onClick={() => changeSearch({ ...search }, { push: false })}>
+              <button
+                onClick={() => {
+                  catalogData.resetCapabilities();
+                  changeSearch({ ...search }, { push: false });
+                }}
+              >
                 Try again
               </button>
             </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getJSON } from "./archive";
 import type { ArtistProfile } from "./archive";
+import { catalogData } from "./catalog-data";
 import { artistProfileImage } from "./artist-images";
 import { discoveryCopy as copy } from "./brand";
 
@@ -18,11 +18,14 @@ export default function ArtistPage({
   useEffect(() => {
     if (!available) return;
     const controller = new AbortController();
-    getJSON<ArtistProfile>(
-      `/api/source-catalog/v1/artist?collection=etree&artist=${encodeURIComponent(artist)}`,
-      controller.signal,
-    )
-      .then(setProfile)
+    catalogData
+      .read<ArtistProfile>(
+        `/api/source-catalog/v1/artist?collection=etree&artist=${encodeURIComponent(artist)}`,
+        controller.signal,
+      )
+      .then((next) => {
+        if (!controller.signal.aborted) setProfile(next);
+      })
       .catch((error: Error) => {
         if (error.name !== "AbortError") setError(error.message);
       });
