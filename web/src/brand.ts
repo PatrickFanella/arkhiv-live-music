@@ -76,3 +76,10 @@ export const recordingCopy = {
   notes: "Notes",
   readFullNotes: "Read the full notes",
 } as const;
+
+export const playerCopy = {
+  placement: "Player position",
+  bottom: "Bottom bar",
+  top: "Top bar",
+  mini: "Floating mini",
+} as const;

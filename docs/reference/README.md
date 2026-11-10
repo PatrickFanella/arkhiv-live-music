@@ -10,3 +10,4 @@ Use this section for durable technical references:
 
 Keep exploratory notes in `docs/research/` until they become stable references.
 - [Recording content](recording-content.md): how notes, source and lineage are selected and rendered.
+- [Player placement](player-placement.md): layouts, persistence and why the audio element never moves.
