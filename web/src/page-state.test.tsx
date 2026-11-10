@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderToString } from "react-dom/server";
 import App from "./App";
-import { catalogQuery, emptySearch, pageView, readSearch, searchQuery } from "./browse";
+import RecordingDetail from "./RecordingDetail";
+import { tracksFor } from "./archive";
+import type { Detail } from "./archive";
+import { catalogQuery, emptySearch, pageView, readSearch, recordingPage, searchQuery } from "./browse";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -37,5 +40,48 @@ describe("shareable root-query pages", () => {
     if (search.includes("dimension=venues")) expect(html.replace(/<!--.*?-->/g, "")).toContain("Find venues");
     expect(html).toContain('class="masthead"');
     if (search.includes("recording")) expect(html).not.toContain('aria-label="Recording list"');
+  });
+});
+
+describe("dedicated recording page", () => {
+  it("links a recording page that reloads directly", () => {
+    const page = recordingPage("gd1977-05-08.sbd");
+    expect(readSearch(searchQuery(page))).toEqual(page);
+    expect(pageView(page)).toBe("recording");
+    expect(catalogQuery(page)).toBe("");
+  });
+
+  it("renders the return link and a focusable heading on a direct load", () => {
+    vi.stubGlobal("window", { location: { search: "?view=recording&id=show.01" } });
+    const html = renderToString(<App />);
+    expect(html).toContain("Back to recordings");
+    expect(html).toMatch(/<h1 tabindex="-1">Recording<\/h1>/);
+    expect(html).not.toContain('aria-label="Audio player"');
+  });
+
+  it("presents description, source, lineage, provenance and tracks in the shared body", () => {
+    const detail: Detail = {
+      metadata: { creator: "Ween", title: "Ween Live at Roseland", date: "1996-10-01", venue: "Roseland" },
+      source_metadata: { description: "Second night.", source: "Schoeps MK4", lineage: "DAT > CD > FLAC" },
+      editorial: {},
+      files: [{ name: "01 Intro.mp3", title: "Intro" }],
+      playback_bindings: [{ item: "i", representation: "r", files: ["01 Intro.mp3"] }],
+    };
+    const tracks = tracksFor("ween1996", detail.files!);
+    const html = renderToString(
+      <RecordingDetail
+        identifier="ween1996"
+        detail={detail}
+        tracks={tracks}
+        actions={<a href="/?view=recording&amp;id=ween1996">Open recording page</a>}
+        resolving={false}
+        playError=""
+        play={() => {}}
+        related={() => {}}
+      />,
+    ).replace(/<!-- -->/g, "");
+    for (const text of ["Ween Live at Roseland", "Second night.", "Schoeps MK4", "DAT &gt; CD &gt; FLAC", "Original metadata snapshot", "1 playable tracks", "Open recording page", "More by Ween"])
+      expect(html).toContain(text);
+    expect(html).toContain("/api/source-catalog/v1/items/ween1996/source?collection=etree");
   });
 });

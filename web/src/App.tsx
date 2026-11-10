@@ -12,7 +12,7 @@ import { recordingArtwork } from "./artwork";
 import BrowseDirectory from "./BrowseDirectory";
 import ArtistPage from "./ArtistPage";
 import DateDiscovery from "./DateDiscovery";
-import RecordingContent from "./RecordingContent";
+import RecordingDetail from "./RecordingDetail";
 import {
   emptySearch,
   pageView,
@@ -21,6 +21,7 @@ import {
   readPages,
   readScroll,
   readSearch,
+  recordingPage,
   searchQuery,
   validateDates,
 } from "./browse";
@@ -120,6 +121,8 @@ export default function App() {
     return () => window.removeEventListener("popstate", restorePage);
   }, []);
   const dialog = useRef<HTMLDialogElement>(null);
+  const pageHeading = useRef<HTMLHeadingElement>(null);
+  const focusHeading = useRef(false);
   const opener = useRef<HTMLElement | null>(null);
   const results = useRef<HTMLDivElement>(null);
   const page = useRef<HTMLElement>(null);
@@ -150,6 +153,25 @@ export default function App() {
   useEffect(() => {
     if (selected && !dialog.current?.open) dialog.current?.showModal();
   }, [selected]);
+  // Opening the page from the panel moves focus to its heading, because the
+  // tape that opened the panel is no longer on screen.
+  useEffect(() => {
+    if (view !== "recording" || !focusHeading.current) return;
+    focusHeading.current = false;
+    pageHeading.current?.focus({ preventScroll: true });
+  }, [view, routeID]);
+  const pageTitle =
+    view === "recording" && detail
+      ? label(detail.metadata.title) || routeID
+      : "";
+  useEffect(() => {
+    if (!pageTitle) return;
+    const previous = document.title;
+    document.title = `${pageTitle} · ${brand.name}`;
+    return () => {
+      document.title = previous;
+    };
+  }, [pageTitle]);
   // Artist photographs are decorative; an older engine or a failed request
   // leaves the curated images in place.
   useEffect(() => {
@@ -328,7 +350,8 @@ export default function App() {
     reveal.current = show;
     if (push)
       window.history.pushState(
-        { pages, scroll: window.scrollY },
+        // inApp marks entries Back can return to without leaving Lineage.
+        { pages, scroll: window.scrollY, inApp: true },
         "",
         `${window.location.pathname}${searchQuery(next) ? `?${searchQuery(next)}` : ""}`,
       );
@@ -446,7 +469,7 @@ export default function App() {
     }
   };
   const play = (index: number) => {
-    if (detail) void startTrack(detail, tracks, index, selected);
+    if (detail) void startTrack(detail, tracks, index, detailID);
   };
   const current = playing?.tracks[playing.index];
   const advance = () => {
@@ -482,18 +505,31 @@ export default function App() {
     },
   } satisfies Record<string, Search>;
   const activeView = view === "artist" ? "browse" : view;
-  const navigate = (next: Search, show: Reveal) => (event: MouseEvent) => {
-    if (
-      event.button !== 0 ||
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey
-    )
-      return;
+  const plainClick = (event: MouseEvent) =>
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey;
+  const navigate =
+    (next: Search, show: Reveal, focus = false) => (event: MouseEvent) => {
+      if (!plainClick(event)) return;
+      event.preventDefault();
+      focusHeading.current = focus;
+      setHistory([]);
+      changeSearch(next, { show });
+    };
+  // A recording page reached inside Lineage returns to the list and its scroll
+  // position; a shared or reloaded link returns to the home page.
+  const goBack = (event: MouseEvent) => {
+    if (!plainClick(event)) return;
     event.preventDefault();
-    setHistory([]);
-    changeSearch(next, { show });
+    if ((window.history.state as { inApp?: unknown } | null)?.inApp)
+      window.history.back();
+    else {
+      setHistory([]);
+      changeSearch({ ...emptySearch }, { show: "top" });
+    }
   };
   const appliedFilters = (Object.keys(filterLabels) as FilterKey[]).filter(
     (key) => search[key],
@@ -594,17 +630,44 @@ export default function App() {
         {view === "search" && <h1>{discoveryCopy.search}</h1>}
         {view === "explore" && <h1>{discoveryCopy.explore}</h1>}
         {view === "recording" && (
-          <section aria-label="Recording page">
+          <section aria-label="Recording page" className="recording-page">
+            <a className="back-link" href="/" onClick={goBack}>
+              ← {discoveryCopy.backToRecordings}
+            </a>
             <p className="eyebrow">{discoveryCopy.recording}</p>
-            <h1>{detail ? label(detail.metadata.title) || routeID : discoveryCopy.recording}</h1>
-            {!routeID ? <p role="alert">{discoveryCopy.invalidRecording}</p> :
-              detailError ? <p role="alert">{detailError}</p> :
-              !detail ? <p role="status">Loading recording…</p> : (
-                <>
-                  <p>{[label(detail.metadata.creator), label(detail.metadata.date), label(detail.metadata.venue)].filter(Boolean).join(" · ")}</p>
-                  <button onClick={() => open(routeID)}>Open recording details and tracks</button>
-                </>
-              )}
+            <h1 ref={pageHeading} tabIndex={-1}>
+              {detail
+                ? label(detail.metadata.creator) || "Unknown artist"
+                : discoveryCopy.recording}
+            </h1>
+            {!routeID ? (
+              <p role="alert">{discoveryCopy.invalidRecording}</p>
+            ) : detailError ? (
+              <div role="alert" className="notice">
+                <p>{detailError}</p>
+                <button
+                  onClick={() => {
+                    setDetailError("");
+                    setRetry(retry + 1);
+                  }}
+                >
+                  Try again
+                </button>
+              </div>
+            ) : !detail ? (
+              <p role="status">Loading recording…</p>
+            ) : (
+              <RecordingDetail
+                identifier={routeID}
+                detail={detail}
+                tracks={tracks}
+                artistPhotos={artistPhotos}
+                resolving={resolving}
+                playError={playError}
+                play={play}
+                related={related}
+              />
+            )}
           </section>
         )}
         {showCatalog && <section
@@ -996,180 +1059,26 @@ export default function App() {
               </div>
             )}
             {detail && (
-              <>
-                <h2>{label(detail.metadata.creator) || "Unknown artist"}</h2>
-                <p className="detail-title">{label(detail.metadata.title)}</p>
-                <Artwork
-                  recording={recordingArtwork(
-                    selected,
-                    detail.files || [],
-                    !!detail.unavailable,
-                  )}
-                  artist={artistImageFor(detail.metadata.creator, artistPhotos)}
-                  name={label(detail.metadata.title) || selected}
-                  caption
-                />
-                <div
-                  className="related-browse"
-                  aria-label="Browse related recordings"
-                >
-                  {label(detail.metadata.creator) && (
-                    <button
-                      onClick={() =>
-                        related({ artist: label(detail.metadata.creator) })
-                      }
-                    >
-                      More by {label(detail.metadata.creator)}
-                    </button>
-                  )}
-                  {label(detail.metadata.venue) && (
-                    <button
-                      onClick={() =>
-                        related({ venue: label(detail.metadata.venue) })
-                      }
-                    >
-                      At this venue
-                    </button>
-                  )}
-                  {/^\d{4}-\d{2}-\d{2}$/.test(label(detail.metadata.date)) && (
-                    <button
-                      onClick={() =>
-                        related({
-                          year: "",
-                          date_from: label(detail.metadata.date),
-                          date_to: label(detail.metadata.date),
-                        })
-                      }
-                    >
-                      On this date
-                    </button>
-                  )}
-                  {label(detail.metadata.coverage) && (
-                    <button
-                      onClick={() =>
-                        related({ q: label(detail.metadata.coverage) })
-                      }
-                    >
-                      Search this place
-                    </button>
-                  )}
-                </div>
-                {detail.unavailable && (
-                  <p role="status" className="notice">
-                    This source was unavailable at the last import. Its catalog
-                    metadata is retained.
-                  </p>
-                )}
-                <RecordingContent detail={detail} />
-                <a
-                  href={`https://archive.org/details/${encodeURIComponent(selected)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Full notes and source files on Internet Archive ↗
-                </a>
-                <details className="provenance">
-                  <summary>Source metadata and catalog changes</summary>
-                  <p>
-                    Updated{" "}
-                    {detail.updated_at
-                      ? new Date(detail.updated_at).toLocaleString()
-                      : "previously"}{" "}
-                    ·{" "}
-                    <a
-                      href={`/api/source-catalog/v1/items/${encodeURIComponent(selected)}/source?collection=etree`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Original metadata snapshot ↗
-                    </a>
-                  </p>
-                  {detail.normalization?.warnings.map((warning) => (
-                    <p key={warning}>{warning}</p>
-                  ))}
-                  {Object.entries(detail.normalization?.derived || {}).map(
-                    ([field, reason]) => (
-                      <p key={field}>
-                        <strong>{field}:</strong> {reason}
-                      </p>
-                    ),
-                  )}
-                  {Object.keys(detail.editorial || {}).length > 0 && (
-                    <dl>
-                      {Object.entries(detail.editorial || {}).map(
-                        ([field, value]) => (
-                          <div key={field}>
-                            <dt>{field}</dt>
-                            <dd>
-                              {label(value)}
-                              <small>
-                                Source:{" "}
-                                {label(detail.source_metadata?.[field]) ||
-                                  "(missing)"}
-                              </small>
-                            </dd>
-                          </div>
-                        ),
-                      )}
-                    </dl>
-                  )}
-                  {detail.history?.map((edit, index) => (
-                    <p key={index}>
-                      {new Date(edit.created_at).toLocaleDateString()}:{" "}
-                      {edit.notes}
-                    </p>
-                  ))}
-                </details>
-                {playError && <p role="alert">{playError}</p>}
-                <div className="track-heading">
-                  <h3>{tracks.length} playable tracks</h3>
-                  {tracks.length > 0 && (
-                    <button
-                      className="primary"
-                      disabled={resolving}
-                      onClick={() => play(0)}
-                    >
-                      Play recording ▶
-                    </button>
-                  )}
-                </div>
-                {!tracks.length && (
-                  <p>
-                    No tracks have been approved for playback here. Source files
-                    and metadata remain available on Internet Archive.
-                  </p>
-                )}
-                <ol className="tracks">
-                  {tracks.map((track, index) => (
-                    <li key={track.name}>
-                      <button onClick={() => play(index)}>
-                        <span className="track-index">
-                          {String(index + 1).padStart(2, "0")}
-                        </span>
-                        <strong title={`Original title: ${track.title || "Not recorded"} · File: ${track.name}`}>
-                          {trackDisplayTitle(track)}
-                        </strong>
-                        <span className="track-length">
-                          {track.length || "▶"}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ol>
-                {tracks.length > 0 && (
-                  <details className="provenance">
-                    <summary>Original track titles and filenames</summary>
-                    <ol>
-                      {tracks.map((track) => (
-                        <li key={track.name}>
-                          <strong>{label(track.title) || "Title not recorded"}</strong>
-                          <div><code>{track.name}</code></div>
-                        </li>
-                      ))}
-                    </ol>
-                  </details>
-                )}
-              </>
+              <RecordingDetail
+                identifier={selected}
+                detail={detail}
+                tracks={tracks}
+                artistPhotos={artistPhotos}
+                heading={(artist) => <h2>{artist}</h2>}
+                actions={
+                  <a
+                    className="recording-page-link"
+                    href={`/?${searchQuery(recordingPage(selected))}`}
+                    onClick={navigate(recordingPage(selected), "top", true)}
+                  >
+                    {discoveryCopy.openRecording}
+                  </a>
+                }
+                resolving={resolving}
+                playError={playError}
+                play={play}
+                related={related}
+              />
             )}
           </section>
         </dialog>

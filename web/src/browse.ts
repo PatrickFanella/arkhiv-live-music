@@ -98,3 +98,9 @@ export function catalogQuery(search: Search): string {
   for (const key of ["view", "id", "dimension"]) params.delete(key);
   return params.toString();
 }
+
+// The shareable page for one recording. It carries no list filters, so Back
+// (not the URL) returns to the list the recording was opened from.
+export function recordingPage(id: string): Search {
+  return { ...emptySearch, view: "recording", id };
+}
