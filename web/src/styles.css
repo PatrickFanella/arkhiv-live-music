@@ -899,6 +899,10 @@ dd {
   bottom: 0;
   left: 0;
   right: 0;
+  /* Open details never push the controls off a short screen. */
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow-y: auto;
   z-index: 4;
   background: var(--color-ink);
   color: var(--color-paper);
@@ -941,6 +945,7 @@ dd {
   left: auto;
   right: 1rem;
   bottom: 1rem;
+  max-height: calc(100dvh - 2rem);
   width: min(360px, 100vw - 2rem);
   padding: 0.75rem;
 }

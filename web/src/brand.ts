@@ -16,6 +16,8 @@ export const discoveryCopy = {
   explore: "Explore the collection",
   recording: "Recording",
   invalidRecording: "Choose a valid recording identifier.",
+  recordingMissing:
+    "This recording is not in the catalog. It may have been excluded or removed.",
   openRecording: "Open recording page",
   backToRecordings: "Back to recordings",
   calendar: "Concert calendar",

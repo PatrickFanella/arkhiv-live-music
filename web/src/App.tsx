@@ -19,6 +19,8 @@ import {
   pageView,
   catalogQuery,
   filterLabels,
+  backTarget,
+  readFocus,
   readPages,
   readScroll,
   readSearch,
@@ -29,7 +31,7 @@ import {
 import type { FilterKey, Reveal, Search } from "./browse";
 import { Fragment, useEffect, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
-import { getJSON, label, tracksFor } from "./archive";
+import { getJSON, label, missingItemMessage, tracksFor } from "./archive";
 import { catalogData } from "./catalog-data";
 import type { Detail, Recording, Track, ImportStatus, Facets } from "./archive";
 import { brand, discoveryCopy, playerCopy } from "./brand";
@@ -104,8 +106,10 @@ export default function App() {
       root.style.removeProperty("--scroll-offset");
     };
   }, [placement, hasPlayer]);
-  const [playError, setPlayError] = useState("");
-  const [resolving, setResolving] = useState(false);
+  // Both name the recording they belong to, so a failure or pending resolution
+  // for the playing recording never shows on another one being inspected.
+  const [playError, setPlayError] = useState<{ id: string; message: string }>();
+  const [resolving, setResolving] = useState("");
   const resolution = useRef<AbortController | null>(null);
   useEffect(() => () => resolution.current?.abort(), []);
   useEffect(() => {
@@ -119,6 +123,8 @@ export default function App() {
       setSearch(next);
       setHistory(readPages(event.state));
       restoreTo.current = readScroll(event.state) ?? 0;
+      focusHeading.current = false;
+      refocus.current = readFocus(event.state);
       setLoading(true);
       setCatalog(undefined);
       setError("");
@@ -131,6 +137,7 @@ export default function App() {
   const dialog = useRef<HTMLDialogElement>(null);
   const pageHeading = useRef<HTMLHeadingElement>(null);
   const focusHeading = useRef(false);
+  const refocus = useRef<string | undefined>(undefined);
   const opener = useRef<HTMLElement | null>(null);
   const results = useRef<HTMLDivElement>(null);
   const page = useRef<HTMLElement>(null);
@@ -327,7 +334,16 @@ export default function App() {
     const top = restoreTo.current;
     restoreTo.current = undefined;
     // After this commit paints, so the restored rows give the page its height.
-    const frame = window.requestAnimationFrame(() => window.scrollTo(0, top));
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo(0, top);
+      // Back from a recording page returns focus to the tape it was opened from.
+      const id = refocus.current;
+      refocus.current = undefined;
+      if (id)
+        page.current
+          ?.querySelector<HTMLElement>(`[data-recording="${CSS.escape(id)}"]`)
+          ?.focus({ preventScroll: true });
+    });
     return () => window.cancelAnimationFrame(frame);
   }, [loading, catalog]);
   const changeSearch = (
@@ -358,8 +374,9 @@ export default function App() {
     reveal.current = show;
     if (push)
       window.history.pushState(
-        // inApp marks entries Back can return to without leaving Lineage.
-        { pages, scroll: window.scrollY, inApp: true },
+        // inApp marks entries Back can return to without leaving Lineage;
+        // from names the view that Back would show.
+        { pages, scroll: window.scrollY, inApp: true, from: view },
         "",
         `${window.location.pathname}${searchQuery(next) ? `?${searchQuery(next)}` : ""}`,
       );
@@ -396,7 +413,7 @@ export default function App() {
   };
   const related = (filters: Partial<Search>) => {
     resolution.current?.abort();
-    setResolving(false);
+    setResolving("");
     closeDetail();
     setHistory([]);
     changeSearch(
@@ -447,11 +464,14 @@ export default function App() {
       candidate.files.includes(track.name),
     );
     if (!binding) {
-      setPlayError("Playback is unavailable for this recording.");
+      setPlayError({
+        id: identifier,
+        message: "Playback is unavailable for this recording.",
+      });
       return;
     }
-    setResolving(true);
-    setPlayError("");
+    setResolving(identifier);
+    setPlayError(undefined);
     try {
       const params = new URLSearchParams({
         collection: "etree",
@@ -469,11 +489,13 @@ export default function App() {
       }
     } catch (error) {
       if (!controller.signal.aborted)
-        setPlayError(
-          error instanceof Error ? error.message : "Playback is unavailable.",
-        );
+        setPlayError({
+          id: identifier,
+          message:
+            error instanceof Error ? error.message : "Playback is unavailable.",
+        });
     } finally {
-      if (!controller.signal.aborted) setResolving(false);
+      if (!controller.signal.aborted) setResolving("");
     }
   };
   const play = (index: number) => {
@@ -523,17 +545,19 @@ export default function App() {
     (next: Search, show: Reveal, focus = false) => (event: MouseEvent) => {
       if (!plainClick(event)) return;
       event.preventDefault();
+      // A recording link to the page already shown only moves focus.
+      if (focus && searchQuery(next) === searchQuery(search)) {
+        pageHeading.current?.focus({ preventScroll: true });
+        return;
+      }
       focusHeading.current = focus;
       setHistory([]);
       changeSearch(next, { show });
     };
-  // A recording page reached inside Lineage returns to the list and its scroll
-  // position; a shared or reloaded link returns to the home page.
   const goBack = (event: MouseEvent) => {
     if (!plainClick(event)) return;
     event.preventDefault();
-    if ((window.history.state as { inApp?: unknown } | null)?.inApp)
-      window.history.back();
+    if (backTarget(window.history.state) === "history") window.history.back();
     else {
       setHistory([]);
       changeSearch({ ...emptySearch }, { show: "top" });
@@ -650,6 +674,8 @@ export default function App() {
             </h1>
             {!routeID ? (
               <p role="alert">{discoveryCopy.invalidRecording}</p>
+            ) : detailError === missingItemMessage ? (
+              <p role="alert">{discoveryCopy.recordingMissing}</p>
             ) : detailError ? (
               <div role="alert" className="notice">
                 <p>{detailError}</p>
@@ -670,8 +696,8 @@ export default function App() {
                 detail={detail}
                 tracks={tracks}
                 artistPhotos={artistPhotos}
-                resolving={resolving}
-                playError={playError}
+                resolving={resolving === detailID}
+                playError={playError?.id === detailID ? playError.message : ""}
                 play={play}
                 related={related}
               />
@@ -926,6 +952,7 @@ export default function App() {
                 <button
                   className="tape"
                   key={recording.identifier}
+                  data-recording={recording.identifier}
                   onClick={() => open(recording.identifier)}
                 >
                   <span className="tape-number">
@@ -1045,7 +1072,7 @@ export default function App() {
                 className="quiet close"
                 onClick={() => {
                   resolution.current?.abort();
-                  setResolving(false);
+                  setResolving("");
                   closeDetail();
                 }}
               >
@@ -1053,7 +1080,10 @@ export default function App() {
               </button>
             </div>
             {!detail && !detailError && <p role="status">Loading recording…</p>}
-            {detailError && (
+            {detailError === missingItemMessage && (
+              <p role="alert">{discoveryCopy.recordingMissing}</p>
+            )}
+            {detailError && detailError !== missingItemMessage && (
               <div role="alert">
                 <p>{detailError}</p>
                 <button
@@ -1077,13 +1107,20 @@ export default function App() {
                   <a
                     className="recording-page-link"
                     href={`/?${searchQuery(recordingPage(selected))}`}
-                    onClick={navigate(recordingPage(selected), "top", true)}
+                    onClick={(event) => {
+                      if (plainClick(event))
+                        window.history.replaceState(
+                          { ...window.history.state, focus: selected },
+                          "",
+                        );
+                      navigate(recordingPage(selected), "top", true)(event);
+                    }}
                   >
                     {discoveryCopy.openRecording}
                   </a>
                 }
-                resolving={resolving}
-                playError={playError}
+                resolving={resolving === detailID}
+                playError={playError?.id === detailID ? playError.message : ""}
                 play={play}
                 related={related}
               />
@@ -1143,7 +1180,9 @@ export default function App() {
               </button>
             </div>
           </div>
-          {playError && <p role="alert">{playError}</p>}
+          {playError?.id === playing.identifier && (
+            <p role="alert">{playError.message}</p>
+          )}
           <StreamPlayer
             key={playing.url}
             track={{ ...current, url: playing.url }}
@@ -1170,7 +1209,7 @@ export default function App() {
             <button
               onClick={advance}
               disabled={
-                resolving || playing.index + 1 === playing.tracks.length
+                !!resolving || playing.index + 1 === playing.tracks.length
               }
             >
               Next →
@@ -1178,8 +1217,8 @@ export default function App() {
             <button
               onClick={() => {
                 resolution.current?.abort();
-                setResolving(false);
-                setPlayError("");
+                setResolving("");
+                setPlayError(undefined);
                 setPlayerDetails(false);
                 setPlaying(undefined);
               }}
@@ -1209,7 +1248,6 @@ export default function App() {
                 <TrackList
                   tracks={playing.tracks}
                   current={playing.index}
-                  disabled={resolving}
                   play={(index) =>
                     void startTrack(
                       playing.recording,
