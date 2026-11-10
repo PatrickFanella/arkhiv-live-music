@@ -21,3 +21,38 @@ export function writePlacement(placement: Placement) {
     /* The choice still applies for this page. */
   }
 }
+
+export const rails: readonly Placement[] = ["left", "right"];
+export const isRail = (placement: Placement) => rails.includes(placement);
+
+// Rails apply from this width; keep in step with the media query in styles.css.
+export const railQuery = "(min-width: 1024px)";
+
+const railKey = "lineage.player.rail";
+export const railDefault = 340;
+export const railMin = 260;
+// A rail never takes more than half the window, so the page keeps its column.
+export const railMax = (viewport: number) =>
+  Math.max(railMin, Math.min(640, Math.floor(viewport / 2)));
+
+export function clampRail(width: number, viewport: number) {
+  if (!Number.isFinite(width)) return railDefault;
+  return Math.round(Math.min(railMax(viewport), Math.max(railMin, width)));
+}
+
+export function readRailWidth(): number {
+  try {
+    const saved = Number(localStorage.getItem(railKey));
+    return saved >= railMin && saved <= 640 ? Math.round(saved) : railDefault;
+  } catch {
+    return railDefault;
+  }
+}
+
+export function writeRailWidth(width: number) {
+  try {
+    localStorage.setItem(railKey, String(Math.round(width)));
+  } catch {
+    /* The width still applies for this page. */
+  }
+}

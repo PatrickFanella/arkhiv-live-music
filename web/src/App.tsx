@@ -29,13 +29,24 @@ import {
   validateDates,
 } from "./browse";
 import type { FilterKey, Reveal, Search } from "./browse";
-import { Fragment, useEffect, useRef, useState } from "react";
-import type { FormEvent, MouseEvent } from "react";
+import { Fragment, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { CSSProperties, FormEvent, KeyboardEvent, MouseEvent } from "react";
 import { getJSON, label, missingItemMessage, tracksFor } from "./archive";
 import { catalogData } from "./catalog-data";
 import type { Detail, Recording, Track, ImportStatus, Facets } from "./archive";
 import { brand, discoveryCopy, playerCopy } from "./brand";
-import { placements, readPlacement, writePlacement } from "./player-placement";
+import {
+  clampRail,
+  isRail,
+  placements,
+  railMax,
+  railMin,
+  railQuery,
+  readPlacement,
+  readRailWidth,
+  writePlacement,
+  writeRailWidth,
+} from "./player-placement";
 import type { Placement } from "./player-placement";
 
 type Catalog = {
@@ -44,6 +55,20 @@ type Catalog = {
   cursor?: string;
   status: ImportStatus;
 };
+function subscribeWide(onChange: () => void) {
+  if (typeof window === "undefined" || !window.matchMedia) return () => {};
+  const query = window.matchMedia(railQuery);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+function useWide() {
+  return useSyncExternalStore(
+    subscribeWide,
+    () => window.matchMedia?.(railQuery).matches ?? false,
+    () => false,
+  );
+}
+
 export default function App() {
   const [search, setSearch] = useState<Search>(() =>
     readSearch(typeof window === "undefined" ? "" : window.location.search),
@@ -86,6 +111,37 @@ export default function App() {
   const shell = useRef<HTMLDivElement>(null);
   const dock = useRef<HTMLElement>(null);
   const hasPlayer = !!playing;
+  // A sidebar is a listening view: its tracklist opens with it and closes when
+  // the player leaves the sidebar or the window falls back to the bottom bar.
+  const wide = useWide();
+  const railShown = isRail(placement) && wide;
+  useEffect(() => {
+    if (hasPlayer) setPlayerDetails(railShown);
+  }, [railShown, hasPlayer]);
+  const [railWidth, setRailWidth] = useState(readRailWidth);
+  const resizeRail = (width: number) => {
+    const next = clampRail(width, window.innerWidth);
+    setRailWidth(next);
+    writeRailWidth(next);
+  };
+  const railKeys = (event: KeyboardEvent<HTMLDivElement>) => {
+    const grow = placement === "left" ? "ArrowRight" : "ArrowLeft";
+    const shrink = placement === "left" ? "ArrowLeft" : "ArrowRight";
+    const step = event.shiftKey ? 64 : 16;
+    const next =
+      event.key === grow
+        ? railWidth + step
+        : event.key === shrink
+          ? railWidth - step
+          : event.key === "Home"
+            ? railMin
+            : event.key === "End"
+              ? railMax(window.innerWidth)
+              : undefined;
+    if (next === undefined) return;
+    event.preventDefault();
+    resizeRail(next);
+  };
   // Placement only changes classes on the same player, so the audio element and
   // its playback state are untouched. Layout follows the player's measured size.
   useEffect(() => {
@@ -578,6 +634,7 @@ export default function App() {
     <div
       ref={shell}
       className={`app-shell${playing ? ` has-player player-${placement}` : ""}`}
+      style={{ "--rail-width": `${railWidth}px` } as CSSProperties}
     >
       <div className="stripes" aria-hidden="true" />
       <header className="masthead">
@@ -966,7 +1023,7 @@ export default function App() {
                     <strong>
                       {label(recording.creator) || "Unknown artist"}
                     </strong>
-                    <span>
+                    <span title={label(recording.title) || recording.identifier}>
                       {label(recording.title) || recording.identifier}
                       {recording.unavailable ? " · Source unavailable" : ""}
                     </span>
@@ -1139,6 +1196,38 @@ export default function App() {
             closePlayerDetails();
           }}
         >
+          {railShown && (
+            <div
+              className="rail-resizer"
+              role="separator"
+              aria-orientation="vertical"
+              aria-label={playerCopy.resize}
+              aria-valuemin={railMin}
+              aria-valuemax={railMax(window.innerWidth)}
+              aria-valuenow={railWidth}
+              tabIndex={0}
+              onKeyDown={railKeys}
+              onPointerDown={(event) => {
+                event.preventDefault();
+                event.currentTarget.setPointerCapture(event.pointerId);
+              }}
+              onPointerMove={(event) => {
+                if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+                setRailWidth(
+                  clampRail(
+                    placement === "left"
+                      ? event.clientX
+                      : window.innerWidth - event.clientX,
+                    window.innerWidth,
+                  ),
+                );
+              }}
+              onPointerUp={(event) => {
+                event.currentTarget.releasePointerCapture(event.pointerId);
+                writeRailWidth(railWidth);
+              }}
+            />
+          )}
           <Artwork
             recording={recordingArtwork(
               playing.identifier,
@@ -1243,7 +1332,6 @@ export default function App() {
                 <button onClick={closePlayerDetails}>Close ×</button>
               </div>
               <div className="recording-body">
-                <RecordingContent detail={playing.recording} />
                 <h3>{playing.tracks.length} playable tracks</h3>
                 <TrackList
                   tracks={playing.tracks}
@@ -1257,6 +1345,7 @@ export default function App() {
                     )
                   }
                 />
+                <RecordingContent detail={playing.recording} />
               </div>
             </section>
           )}
