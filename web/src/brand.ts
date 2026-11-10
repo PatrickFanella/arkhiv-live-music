@@ -82,4 +82,6 @@ export const playerCopy = {
   bottom: "Bottom bar",
   top: "Top bar",
   mini: "Floating mini",
+  left: "Left sidebar",
+  right: "Right sidebar",
 } as const;

@@ -1,4 +1,4 @@
-export const placements = ["bottom", "top", "mini"] as const;
+export const placements = ["bottom", "top", "mini", "left", "right"] as const;
 export type Placement = (typeof placements)[number];
 
 const storageKey = "lineage.player.placement";

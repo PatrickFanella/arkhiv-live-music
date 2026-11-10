@@ -1,6 +1,7 @@
 # Player placement
 
-The player has a bottom bar (default), a top bar and a floating mini layout.
+The player has a bottom bar (default), a top bar, a floating mini layout and
+left or right sidebars.
 **Player position**, in the player itself, switches between them.
 
 Placement changes only classes on the existing player. The audio element, its
@@ -11,3 +12,9 @@ mid-track. Only the validated placement name is stored, under
 The shell reorders around the player with CSS because moving the element in the
 document would remount the audio. `--player-height` reserves page space for the
 final row. `--scroll-offset` keeps reveal targets below the top bar.
+
+The sidebars need a window at least 1024 px wide. The shell gains padding on the
+chosen side, so the masthead, page and footer reflow beside the rail instead of
+under it. In narrower windows the player shows the bottom bar while the saved
+sidebar choice stays selected; widening the window restores the rail. A long queue
+or name scrolls inside the rail.

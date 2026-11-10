@@ -18,12 +18,12 @@ describe("player placement preference", () => {
     expect(readPlacement()).toBe("bottom");
   });
 
-  it.each(["top", "mini", "bottom"])("restores a saved %s placement", (value) => {
+  it.each(["top", "mini", "bottom", "left", "right"])("restores a saved %s placement", (value) => {
     vi.stubGlobal("localStorage", storage({ "lineage.player.placement": value }));
     expect(readPlacement()).toBe(value);
   });
 
-  it.each(["left", "sideways", "", "TOP"])("rejects the invalid value %j", (value) => {
+  it.each(["sideways", "", "TOP", "Left"])("rejects the invalid value %j", (value) => {
     vi.stubGlobal("localStorage", storage({ "lineage.player.placement": value }));
     expect(readPlacement()).toBe("bottom");
   });
