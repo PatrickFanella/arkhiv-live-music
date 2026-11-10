@@ -73,3 +73,14 @@ Provider response bundles, database state and build artifacts remain outside Git
 Sources: [MusicBrainz API](https://musicbrainz.org/doc/MusicBrainz_API),
 [rate limits](https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting),
 [Wikimedia REST API](https://www.mediawiki.org/wiki/Wikimedia_REST_API).
+
+## Scroll behavior
+
+Each state change names what it should reveal. The wordmark goes to the page top,
+view links to their heading, and a search submission or page change to the results
+heading. Calendar selections and filter changes reveal nothing, and the list keeps
+its height while it reloads so the page does not jump.
+
+Every history entry stores its scroll position. Back and Forward restore it after
+that entry's results load. Reveals use `--scroll-offset` for any fixed top element
+and honor reduced motion.

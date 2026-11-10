@@ -55,6 +55,15 @@ export function readPages(state: unknown): string[] {
     ? pages
     : [];
 }
+// The scroll position kept with each history entry, for Back and Forward.
+export function readScroll(state: unknown): number | undefined {
+  const scroll = (state as { scroll?: unknown } | null)?.scroll;
+  return typeof scroll === "number" && Number.isFinite(scroll) && scroll >= 0
+    ? scroll
+    : undefined;
+}
+// What a change should bring into view. Refinements stay where they are.
+export type Reveal = "none" | "top" | "heading" | "results";
 export function searchQuery(search: Search): string {
   return new URLSearchParams(
     Object.entries(search).filter(([, value]) => value !== ""),

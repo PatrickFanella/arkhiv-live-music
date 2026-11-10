@@ -18,11 +18,12 @@ import {
   catalogQuery,
   filterLabels,
   readPages,
+  readScroll,
   readSearch,
   searchQuery,
   validateDates,
 } from "./browse";
-import type { FilterKey, Search } from "./browse";
+import type { FilterKey, Reveal, Search } from "./browse";
 import { Fragment, useEffect, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
 import { getJSON, label, tracksFor } from "./archive";
@@ -52,6 +53,7 @@ export default function App() {
   const [catalog, setCatalog] = useState<Catalog>();
   const [history, setHistory] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reserved, setReserved] = useState(0);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState("");
   const detailID = selected || routeID;
@@ -70,7 +72,7 @@ export default function App() {
   const resolution = useRef<AbortController | null>(null);
   useEffect(() => () => resolution.current?.abort(), []);
   useEffect(() => {
-    const restore = (event: PopStateEvent) => {
+    const restorePage = (event: PopStateEvent) => {
       const next = readSearch(window.location.search);
       dialog.current?.close();
       setSelected("");
@@ -79,18 +81,44 @@ export default function App() {
       setDraft(next);
       setSearch(next);
       setHistory(readPages(event.state));
+      restoreTo.current = readScroll(event.state) ?? 0;
       setLoading(true);
       setCatalog(undefined);
       setError("");
       setFilterError("");
       setCopied("");
     };
-    window.addEventListener("popstate", restore);
-    return () => window.removeEventListener("popstate", restore);
+    window.addEventListener("popstate", restorePage);
+    return () => window.removeEventListener("popstate", restorePage);
   }, []);
   const dialog = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLElement | null>(null);
   const results = useRef<HTMLDivElement>(null);
+  const page = useRef<HTMLElement>(null);
+  const catalogSection = useRef<HTMLElement>(null);
+  const reveal = useRef<Reveal>("none");
+  const restoreTo = useRef<number | undefined>(undefined);
+  // Results fetched after a position is restored would otherwise be too short
+  // for the browser to reach it, so position is managed here.
+  useEffect(() => {
+    window.history.scrollRestoration = "manual";
+    restoreTo.current = readScroll(window.history.state);
+    let timer = 0;
+    const save = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        window.history.replaceState(
+          { ...window.history.state, scroll: window.scrollY },
+          "",
+        );
+      }, 150);
+    };
+    window.addEventListener("scroll", save, { passive: true });
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("scroll", save);
+    };
+  }, []);
   useEffect(() => {
     if (selected && !dialog.current?.open) dialog.current?.showModal();
   }, [selected]);
@@ -222,12 +250,44 @@ export default function App() {
       });
     return () => controller.abort();
   }, [facetRetry]);
-  const changeSearch = (next: Search, push = true, pages: string[] = []) => {
+  useEffect(() => {
+    const behavior: ScrollBehavior = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches
+      ? "auto"
+      : "smooth";
+    const target = reveal.current;
+    reveal.current = "none";
+    if (target === "top") window.scrollTo({ top: 0, behavior });
+    else if (target === "results" && results.current)
+      results.current.scrollIntoView({ behavior, block: "start" });
+    else if (target !== "none")
+      page.current
+        ?.querySelector("h1")
+        ?.scrollIntoView({ behavior, block: "start" });
+  }, [search]);
+  useEffect(() => {
+    if (loading || restoreTo.current === undefined) return;
+    const top = restoreTo.current;
+    restoreTo.current = undefined;
+    // After this commit paints, so the restored rows give the page its height.
+    const frame = window.requestAnimationFrame(() => window.scrollTo(0, top));
+    return () => window.cancelAnimationFrame(frame);
+  }, [loading, catalog]);
+  const changeSearch = (
+    next: Search,
+    {
+      push = true,
+      pages = [],
+      show = "none",
+    }: { push?: boolean; pages?: string[]; show?: Reveal } = {},
+  ) => {
     const validation = validateDates(next);
     if (validation) {
       setFilterError(validation);
       return;
     }
+    setReserved(show === "none" ? (catalogSection.current?.offsetHeight ?? 0) : 0);
     dialog.current?.close();
     setSelected("");
     setDetail(undefined);
@@ -239,21 +299,21 @@ export default function App() {
     setCatalog(undefined);
     setSearch(next);
     setDraft(next);
-    results.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    reveal.current = show;
     if (push)
       window.history.pushState(
-        { pages },
+        { pages, scroll: window.scrollY },
         "",
         `${window.location.pathname}${searchQuery(next) ? `?${searchQuery(next)}` : ""}`,
       );
   };
-  const applyFilters = (filters: Partial<Search>) => {
+  const applyFilters = (filters: Partial<Search>, show: Reveal = "none") => {
     if (filters.month_day === "" && search.view === "on-this-day")
       filters = { ...filters, view: "", sort: "" };
     if (filters.year_from === "" || filters.year_to === "")
       filters = { ...filters, year_from: "", year_to: "" };
     setHistory([]);
-    changeSearch({ ...search, ...filters, cursor: "" });
+    changeSearch({ ...search, ...filters, cursor: "" }, { show });
   };
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -262,13 +322,16 @@ export default function App() {
       return;
     }
     setHistory([]);
-    changeSearch({
-      ...draft,
-      q: draft.q.trim(),
-      artist: draft.artist.trim(),
-      venue: draft.venue.trim(),
-      cursor: "",
-    });
+    changeSearch(
+      {
+        ...draft,
+        q: draft.q.trim(),
+        artist: draft.artist.trim(),
+        venue: draft.venue.trim(),
+        cursor: "",
+      },
+      { show: "results" },
+    );
   };
   const editFilter = (key: FilterKey, value: string) => {
     setDraft({ ...draft, [key]: value });
@@ -279,11 +342,14 @@ export default function App() {
     setResolving(false);
     closeDetail();
     setHistory([]);
-    changeSearch({
-      ...emptySearch,
-      ...filters,
-      view: filters.artist ? "artist" : "",
-    });
+    changeSearch(
+      {
+        ...emptySearch,
+        ...filters,
+        view: filters.artist ? "artist" : "",
+      },
+      { show: "heading" },
+    );
   };
   const open = (id: string) => {
     opener.current =
@@ -298,7 +364,7 @@ export default function App() {
   // opened it instead of falling back to the document body.
   const closeDetail = () => {
     dialog.current?.close();
-    opener.current?.focus();
+    opener.current?.focus({ preventScroll: true });
     opener.current = null;
     setSelected("");
   };
@@ -390,7 +456,7 @@ export default function App() {
     },
   } satisfies Record<string, Search>;
   const activeView = view === "artist" ? "browse" : view;
-  const navigate = (next: Search) => (event: MouseEvent) => {
+  const navigate = (next: Search, show: Reveal) => (event: MouseEvent) => {
     if (
       event.button !== 0 ||
       event.metaKey ||
@@ -401,7 +467,7 @@ export default function App() {
       return;
     event.preventDefault();
     setHistory([]);
-    changeSearch(next);
+    changeSearch(next, { show });
   };
   const appliedFilters = (Object.keys(filterLabels) as FilterKey[]).filter(
     (key) => search[key],
@@ -422,7 +488,7 @@ export default function App() {
           <a
             className="wordmark"
             href="/"
-            onClick={navigate(destinations.browse)}
+            onClick={navigate(destinations.browse, "top")}
           >
             <strong>{brand.name}</strong>
             <span>{brand.descriptor}</span>
@@ -441,7 +507,7 @@ export default function App() {
                 key={key}
                 href={`/${searchQuery(destinations[key]) ? `?${searchQuery(destinations[key])}` : ""}`}
                 aria-current={activeView === key ? "page" : undefined}
-                onClick={navigate(destinations[key])}
+                onClick={navigate(destinations[key], key === "browse" ? "top" : "heading")}
               >
                 {text}
               </a>
@@ -457,7 +523,7 @@ export default function App() {
           </a>
         </div>
       </header>
-      <main>
+      <main ref={page}>
         {search.artist && (view === "artist" || view === "search") && (
             <ArtistPage
               key={search.artist}
@@ -628,11 +694,24 @@ export default function App() {
           select={(filters) => {
             if (filters.artist) {
               setHistory([]);
-              changeSearch({ ...emptySearch, ...filters, view: "artist" });
-            } else applyFilters({ ...filters, ...(view === "explore" ? { view: "search" } : {}) });
+              changeSearch(
+                { ...emptySearch, ...filters, view: "artist" },
+                { show: "heading" },
+              );
+            } else
+              applyFilters(
+                { ...filters, ...(view === "explore" ? { view: "search" } : {}) },
+                "results",
+              );
           }}
         />}
-        {showCatalog && <section aria-label="Recording list" className="catalog">
+        {showCatalog && <section
+          aria-label="Recording list"
+          className="catalog"
+          ref={catalogSection}
+          aria-busy={loading}
+          style={loading && reserved ? { minHeight: reserved } : undefined}
+        >
           <div className="catalog-heading" ref={results}>
             <h2>
               {search.view === "on-this-day"
@@ -701,7 +780,7 @@ export default function App() {
                 className="quiet"
                 onClick={() => {
                   setHistory([]);
-                  changeSearch({ ...emptySearch });
+                  changeSearch({ ...emptySearch }, { show: "top" });
                 }}
               >
                 Clear all
@@ -716,7 +795,7 @@ export default function App() {
           {error && (
             <div role="alert" className="notice">
               <p>{error}</p>
-              <button onClick={() => changeSearch({ ...search }, false)}>
+              <button onClick={() => changeSearch({ ...search }, { push: false })}>
                 Try again
               </button>
             </div>
@@ -783,7 +862,7 @@ export default function App() {
                   const cursor = history[history.length - 1];
                   const pages = history.slice(0, -1);
                   setHistory(pages);
-                  changeSearch({ ...search, cursor }, true, pages);
+                  changeSearch({ ...search, cursor }, { pages, show: "results" });
                 }}
               >
                 ← Previous
@@ -801,8 +880,7 @@ export default function App() {
                   setHistory(pages);
                   changeSearch(
                     { ...search, cursor: catalog.cursor || "" },
-                    true,
-                    pages,
+                    { pages, show: "results" },
                   );
                 }}
               >
