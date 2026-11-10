@@ -84,3 +84,15 @@ its height while it reloads so the page does not jump.
 Every history entry stores its scroll position. Back and Forward restore it after
 that entry's results load. Reveals use `--scroll-offset` for any fixed top element
 and honor reduced motion.
+
+## Request reuse
+
+`web/src/catalog-data.ts` is the frontend's in-memory read boundary. One successful
+`/api/version` read serves the page session; **Try again** after a catalog failure
+rereads it. Item pages, facets, calendar counts, artist profiles and the photo
+directory are shared while in flight and reused for 30 seconds, keyed by the
+answering runtime and the complete normalized query. The cache holds at most 64
+responses, and failures are never retained.
+
+Recording details, playback resolution and status polling bypass the boundary.
+Nothing it holds reaches browser storage.
