@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getJSON } from "./archive";
 import type { ConcertCalendar } from "./archive";
+import { catalogData } from "./catalog-data";
 import type { Search } from "./browse";
 import { discoveryCopy as copy } from "./brand";
 
@@ -157,11 +157,14 @@ function MonthGrid({
   const [retry, setRetry] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
-    getJSON<ConcertCalendar>(
-      `/api/source-catalog/v1/calendar?${calendarQuery(search, month)}`,
-      controller.signal,
-    )
-      .then(setCalendar)
+    catalogData
+      .read<ConcertCalendar>(
+        `/api/source-catalog/v1/calendar?${calendarQuery(search, month)}`,
+        controller.signal,
+      )
+      .then((next) => {
+        if (!controller.signal.aborted) setCalendar(next);
+      })
       .catch((error: Error) => {
         if (error.name !== "AbortError") setError(error.message);
       });
