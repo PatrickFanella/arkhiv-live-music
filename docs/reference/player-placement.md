@@ -40,6 +40,21 @@ now-playing panel: large cover art, then the scrubber, a centred transport and
 volume. The mini player and phones leave out the volume slider; phones have
 their own volume buttons.
 
+## Phones
+
+At 650 px and below every placement except the floating mini player is a
+compact bar above the tab bar: cover art, the track title, play or pause and
+next, with a thin progress line along its top edge. Tapping the rest of the bar
+(**Open player**) opens the full-screen player: large cover art, the title,
+**Open recording page**, the scrubber, a large transport, the position select,
+Stop and the always-open tracklist and notes. The page behind it is inert.
+**Close player** or Escape returns to the bar and focus returns to **Open
+player**. Widening the window past 650 px closes the full-screen player.
+
+Every placement also sets Media Session metadata (track, artist, recording) and
+answers its play, pause, previous, next and seek actions, so lock screens,
+headsets and media keys control the same transport.
+
 ## The playing recording
 
 Every placement has **Open recording page**, which opens the recording that is
