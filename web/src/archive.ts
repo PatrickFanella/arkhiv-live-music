@@ -103,6 +103,9 @@ export function tracksFor(id: string, files: ArchiveFile[]): Track[] {
       sourceId: id,
     }));
 }
+// The pinned viewer kit's message for an HTTP 404 (`catalogRequest`). Excluded
+// and unknown recordings answer 404, so retrying cannot help.
+export const missingItemMessage = "This item is unavailable for this collection.";
 export async function getJSON<T>(
   path: string,
   signal: AbortSignal,

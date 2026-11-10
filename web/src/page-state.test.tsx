@@ -2,9 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderToString } from "react-dom/server";
 import App from "./App";
 import RecordingDetail, { TrackList } from "./RecordingDetail";
-import { tracksFor } from "./archive";
+import { getJSON, missingItemMessage, tracksFor } from "./archive";
 import type { Detail } from "./archive";
-import { catalogQuery, emptySearch, pageView, readSearch, recordingPage, searchQuery } from "./browse";
+import { backTarget, catalogQuery, emptySearch, pageView, readFocus, readSearch, recordingPage, searchQuery } from "./browse";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -100,5 +100,34 @@ describe("playing recording track list", () => {
     expect(html).toContain("Playing");
     expect(html).toContain("Original title: 01 Intro (Live) · File: 01 Intro.mp3");
     expect(html).toContain("<code>02 Song.mp3</code>");
+  });
+});
+
+describe("recording page return and missing states", () => {
+  it.each([
+    [null, "home"],
+    [{ scroll: 40 }, "home"],
+    [{ inApp: "yes" }, "home"],
+    [{ inApp: true, from: "recording" }, "home"],
+    [{ inApp: true, from: "artist" }, "history"],
+    [{ inApp: true }, "history"],
+  ])("returns from history state %j to %s", (state, target) => {
+    expect(backTarget(state)).toBe(target);
+  });
+
+  it("reads only a named tape to refocus", () => {
+    expect(readFocus({ focus: "show.01" })).toBe("show.01");
+    for (const state of [null, {}, { focus: "" }, { focus: 7 }])
+      expect(readFocus(state)).toBeUndefined();
+  });
+
+  it("matches the pinned kit's 404 message, so excluded recordings get no retry", async () => {
+    vi.stubGlobal("fetch", async () => new Response("", { status: 404 }));
+    await expect(getJSON("/api/x", new AbortController().signal)).rejects.toThrow(missingItemMessage);
+  });
+
+  it("rejects an identifier with unsupported characters", () => {
+    vi.stubGlobal("window", { location: { search: "?view=recording&id=bad!id" } });
+    expect(renderToString(<App />)).toContain("Choose a valid recording identifier");
   });
 });

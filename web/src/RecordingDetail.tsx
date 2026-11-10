@@ -15,12 +15,10 @@ export function TrackList({
   tracks,
   play,
   current,
-  disabled = false,
 }: {
   tracks: Track[];
   play: (index: number) => void;
   current?: number;
-  disabled?: boolean;
 }) {
   return (
     <>
@@ -29,7 +27,6 @@ export function TrackList({
           <li key={track.name}>
             <button
               onClick={() => play(index)}
-              disabled={disabled}
               aria-current={index === current ? "true" : undefined}
             >
               <span className="track-index">

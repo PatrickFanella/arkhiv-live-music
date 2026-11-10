@@ -104,3 +104,20 @@ export function catalogQuery(search: Search): string {
 export function recordingPage(id: string): Search {
   return { ...emptySearch, view: "recording", id };
 }
+
+// The tape a recording page was opened from, kept with the list's history entry.
+export function readFocus(state: unknown): string | undefined {
+  const focus = (state as { focus?: unknown } | null)?.focus;
+  return typeof focus === "string" && focus ? focus : undefined;
+}
+
+// Where the recording page's return link goes. An entry pushed inside Lineage
+// from a list returns through history, keeping its filters, page and scroll.
+// A shared or reloaded link, or one reached from another recording page, goes
+// to the home page.
+export function backTarget(state: unknown): "history" | "home" {
+  const entry = state as { inApp?: unknown; from?: unknown } | null;
+  return entry?.inApp === true && entry.from !== "recording"
+    ? "history"
+    : "home";
+}
