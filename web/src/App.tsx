@@ -574,6 +574,15 @@ export default function App() {
         playing.identifier,
       );
   };
+  const retreat = () => {
+    if (playing && playing.index > 0)
+      void startTrack(
+        playing.recording,
+        playing.tracks,
+        playing.index - 1,
+        playing.identifier,
+      );
+  };
   const pad = (value: number) => String(value).padStart(2, "0");
   const now = new Date();
   const destinations = {
@@ -1400,6 +1409,10 @@ export default function App() {
             key={playing.url}
             track={{ ...current, url: playing.url }}
             onEnded={advance}
+            onNext={advance}
+            onPrevious={retreat}
+            hasNext={!resolving && playing.index + 1 < playing.tracks.length}
+            hasPrevious={!resolving && playing.index > 0}
           />
           <div className="player-actions">
             <label className="player-placement">
@@ -1419,14 +1432,6 @@ export default function App() {
                 ))}
               </select>
             </label>
-            <button
-              onClick={advance}
-              disabled={
-                !!resolving || playing.index + 1 === playing.tracks.length
-              }
-            >
-              Next →
-            </button>
             <button
               onClick={() => {
                 resolution.current?.abort();
