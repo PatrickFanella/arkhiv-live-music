@@ -9,6 +9,63 @@ import type { Detail, Track } from "./archive";
 import type { Search } from "./browse";
 import { trackDisplayTitle } from "./track-title";
 
+// Display titles are cleaned; each row keeps its original title and file name
+// as a tooltip, and the disclosure lists them all.
+export function TrackList({
+  tracks,
+  play,
+  current,
+  disabled = false,
+}: {
+  tracks: Track[];
+  play: (index: number) => void;
+  current?: number;
+  disabled?: boolean;
+}) {
+  return (
+    <>
+      <ol className="tracks">
+        {tracks.map((track, index) => (
+          <li key={track.name}>
+            <button
+              onClick={() => play(index)}
+              disabled={disabled}
+              aria-current={index === current ? "true" : undefined}
+            >
+              <span className="track-index">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <strong
+                title={`Original title: ${track.title || "Not recorded"} · File: ${track.name}`}
+              >
+                {trackDisplayTitle(track)}
+              </strong>
+              <span className="track-length">
+                {index === current ? "Playing" : track.length || "▶"}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ol>
+      {tracks.length > 0 && (
+        <details className="provenance">
+          <summary>Original track titles and filenames</summary>
+          <ol>
+            {tracks.map((track) => (
+              <li key={track.name}>
+                <strong>{label(track.title) || "Title not recorded"}</strong>
+                <div>
+                  <code>{track.name}</code>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
+    </>
+  );
+}
+
 // The panel and the recording page present the same recording body. The
 // surface owns its heading, loading and error states and navigation.
 export default function RecordingDetail({
@@ -156,38 +213,7 @@ export default function RecordingDetail({
           metadata remain available on Internet Archive.
         </p>
       )}
-      <ol className="tracks">
-        {tracks.map((track, index) => (
-          <li key={track.name}>
-            <button onClick={() => play(index)}>
-              <span className="track-index">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <strong
-                title={`Original title: ${track.title || "Not recorded"} · File: ${track.name}`}
-              >
-                {trackDisplayTitle(track)}
-              </strong>
-              <span className="track-length">{track.length || "▶"}</span>
-            </button>
-          </li>
-        ))}
-      </ol>
-      {tracks.length > 0 && (
-        <details className="provenance">
-          <summary>Original track titles and filenames</summary>
-          <ol>
-            {tracks.map((track) => (
-              <li key={track.name}>
-                <strong>{label(track.title) || "Title not recorded"}</strong>
-                <div>
-                  <code>{track.name}</code>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </details>
-      )}
+      <TrackList tracks={tracks} play={play} />
     </div>
   );
 }

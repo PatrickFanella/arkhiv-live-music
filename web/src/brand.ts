@@ -81,6 +81,10 @@ export const recordingCopy = {
 
 export const playerCopy = {
   placement: "Player position",
+  openRecording: "Open recording page",
+  showDetails: "Details",
+  hideDetails: "Hide details",
+  details: "Playing recording details",
   bottom: "Bottom bar",
   top: "Top bar",
   mini: "Floating mini",

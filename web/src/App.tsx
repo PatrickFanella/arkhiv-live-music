@@ -12,7 +12,8 @@ import { recordingArtwork } from "./artwork";
 import BrowseDirectory from "./BrowseDirectory";
 import ArtistPage from "./ArtistPage";
 import DateDiscovery from "./DateDiscovery";
-import RecordingDetail from "./RecordingDetail";
+import RecordingDetail, { TrackList } from "./RecordingDetail";
+import RecordingContent from "./RecordingContent";
 import {
   emptySearch,
   pageView,
@@ -73,6 +74,13 @@ export default function App() {
     url: string;
   }>();
   const [placement, setPlacement] = useState<Placement>(readPlacement);
+  // One disclosure for the playing recording, shared by every placement.
+  const [playerDetails, setPlayerDetails] = useState(false);
+  const detailsToggle = useRef<HTMLButtonElement>(null);
+  const closePlayerDetails = () => {
+    setPlayerDetails(false);
+    detailsToggle.current?.focus({ preventScroll: true });
+  };
   const shell = useRef<HTMLDivElement>(null);
   const dock = useRef<HTMLElement>(null);
   const hasPlayer = !!playing;
@@ -1088,6 +1096,11 @@ export default function App() {
           ref={dock}
           className={`player ${placement}`}
           aria-label="Audio player"
+          onKeyDown={(event) => {
+            if (event.key !== "Escape" || !playerDetails) return;
+            event.stopPropagation();
+            closePlayerDetails();
+          }}
         >
           <Artwork
             recording={recordingArtwork(
@@ -1110,6 +1123,25 @@ export default function App() {
             <p>
               Track {playing.index + 1} of {playing.tracks.length}
             </p>
+            <div className="player-links">
+              <a
+                href={`/?${searchQuery(recordingPage(playing.identifier))}`}
+                onClick={navigate(recordingPage(playing.identifier), "top", true)}
+              >
+                {playerCopy.openRecording}
+              </a>
+              <button
+                ref={detailsToggle}
+                className="quiet"
+                aria-expanded={playerDetails}
+                aria-controls="player-details"
+                onClick={() =>
+                  playerDetails ? closePlayerDetails() : setPlayerDetails(true)
+                }
+              >
+                {playerDetails ? playerCopy.hideDetails : playerCopy.showDetails}
+              </button>
+            </div>
           </div>
           {playError && <p role="alert">{playError}</p>}
           <StreamPlayer
@@ -1148,12 +1180,48 @@ export default function App() {
                 resolution.current?.abort();
                 setResolving(false);
                 setPlayError("");
+                setPlayerDetails(false);
                 setPlaying(undefined);
               }}
             >
               Stop ×
             </button>
           </div>
+          {playerDetails && (
+            <section
+              id="player-details"
+              className="player-details"
+              aria-label={playerCopy.details}
+            >
+              <div className="player-details-head">
+                <p>
+                  <strong>
+                    {label(playing.recording.metadata.creator) ||
+                      "Unknown artist"}
+                  </strong>{" "}
+                  · {label(playing.recording.metadata.title) || playing.identifier}
+                </p>
+                <button onClick={closePlayerDetails}>Close ×</button>
+              </div>
+              <div className="recording-body">
+                <RecordingContent detail={playing.recording} />
+                <h3>{playing.tracks.length} playable tracks</h3>
+                <TrackList
+                  tracks={playing.tracks}
+                  current={playing.index}
+                  disabled={resolving}
+                  play={(index) =>
+                    void startTrack(
+                      playing.recording,
+                      playing.tracks,
+                      index,
+                      playing.identifier,
+                    )
+                  }
+                />
+              </div>
+            </section>
+          )}
         </aside>
       )}
     </div>
