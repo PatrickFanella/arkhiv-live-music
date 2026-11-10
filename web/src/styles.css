@@ -1084,7 +1084,11 @@ dd {
   white-space: nowrap;
 }
 .player.mini .stream-player {
-  width: 100%;
+  flex-basis: 100%;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.player.mini .volume {
+  display: none;
 }
 /* Sidebar rails need room beside the content column. Narrower windows keep
    the saved choice but show the bottom bar, so nothing covers the page. */
@@ -1136,18 +1140,59 @@ dd {
     flex: none;
     min-width: 0;
   }
+  /* A sidebar is the now-playing panel: large cover art, then the scrubber,
+     a centred transport and volume. */
+  .player.left .artwork,
+  .player.right .artwork {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+  .player.left .artwork-placeholder,
+  .player.right .artwork-placeholder {
+    font-size: 3rem;
+  }
+  .player.left .player-meta strong,
+  .player.right .player-meta strong {
+    font-size: 1.1rem;
+    line-height: 1.2;
+  }
   .player.left .stream-player,
   .player.right .stream-player {
-    width: 100%;
+    flex: none;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+  .player.left .scrubber,
+  .player.right .scrubber {
+    order: 1;
+  }
+  .player.left .transport,
+  .player.right .transport {
+    order: 2;
+    justify-content: center;
+    gap: 1rem;
+  }
+  .player.left .transport-play,
+  .player.right .transport-play {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+  .player.left .volume,
+  .player.right .volume {
+    order: 3;
+  }
+  .player.left .volume input,
+  .player.right .volume input {
+    flex: 1;
   }
   .player.left .player-actions,
   .player.right .player-actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
   .player.left .player-placement,
   .player.right .player-placement {
-    grid-column: 1 / -1;
     flex-direction: column;
     align-items: stretch;
   }
@@ -1232,12 +1277,90 @@ dd {
   background: var(--color-paper);
   color: var(--color-ink);
 }
+/* Lineage's own transport: previous, play and next, a scrubber and volume. */
 .stream-player {
-  width: min(360px, 100%);
+  flex: 1 1 24rem;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(8rem, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem 0.9rem;
 }
 .stream-player audio {
-  display: block;
-  width: 100%;
+  display: none;
+}
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.player .transport-skip {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-height: 0;
+  padding: 0;
+  border-color: transparent;
+  border-radius: 50%;
+}
+.player .transport-play {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-stripe-mustard);
+  color: #1c1915;
+}
+.player .transport-play:hover:not(:disabled) {
+  background: var(--color-paper);
+  color: #1c1915;
+}
+.transport-play[aria-busy="true"] svg {
+  opacity: 0.55;
+}
+.scrubber,
+.volume {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.scrubber input,
+.volume input {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: 1.25rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--color-stripe-mustard);
+}
+.volume input {
+  width: 5.5rem;
+  flex: none;
+}
+.time {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+  min-width: 2.6rem;
+}
+.scrubber .time:last-child {
+  text-align: right;
+}
+.stream-error {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 [role="alert"] {
   color: var(--color-marker);
@@ -1636,8 +1759,13 @@ dd {
     padding-right: 0.5rem;
   }
   .stream-player {
-    width: 100%;
+    flex-basis: 100%;
     order: 3;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  /* Phones have their own volume buttons. */
+  .volume {
+    display: none;
   }
   .player.top .artwork {
     display: none;

@@ -28,6 +28,18 @@ that edge and use the arrow keys (Shift for bigger steps), Home or End, to set a
 width between 260 px and 640 px, never more than half the window. The width is
 stored under `lineage.player.rail`; an invalid or missing value uses the default.
 
+## Controls
+
+The audio element has no native controls; Lineage draws its own transport in
+every placement: previous, play or pause, and next; a scrubber with elapsed and
+total time; and a mute button with a volume slider. Previous restarts the track
+once it has played for more than three seconds, otherwise it plays the track
+before. The kit's `useAudioControls` keeps the position, completion and the
+saved volume, so the volume carries from track to track. A sidebar is the
+now-playing panel: large cover art, then the scrubber, a centred transport and
+volume. The mini player and phones leave out the volume slider; phones have
+their own volume buttons.
+
 ## The playing recording
 
 Every placement has **Open recording page**, which opens the recording that is
