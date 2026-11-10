@@ -230,6 +230,7 @@ summary {
   );
 }
 header.masthead {
+  container: masthead / inline-size;
   border-bottom: 1px solid var(--color-rule);
   font-size: 0.85rem;
 }
@@ -957,6 +958,71 @@ dd {
 .player.mini .stream-player {
   width: 100%;
 }
+/* Sidebar rails need room beside the content column. Narrower windows keep
+   the saved choice but show the bottom bar, so nothing covers the page. */
+@media (min-width: 1024px) {
+  .app-shell {
+    --rail: 300px;
+  }
+  .app-shell.player-left {
+    padding-left: var(--rail);
+  }
+  .app-shell.player-right {
+    padding-right: var(--rail);
+  }
+  .player-left main,
+  .player-right main {
+    padding-bottom: 4rem;
+  }
+  .player.left,
+  .player.right {
+    top: 0;
+    bottom: 0;
+    width: var(--rail);
+    padding: 1.25rem;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-top: 0;
+    border-image: linear-gradient(
+        to bottom,
+        var(--color-stripe-red) 0 33.3%,
+        var(--color-stripe-mustard) 33.3% 66.6%,
+        var(--color-stripe-teal) 66.6%
+      )
+      1;
+  }
+  .player.left {
+    right: auto;
+    border-right: 6px solid;
+  }
+  .player.right {
+    left: auto;
+    border-left: 6px solid;
+  }
+  .player.left .player-meta,
+  .player.right .player-meta {
+    flex: none;
+    min-width: 0;
+  }
+  .player.left .stream-player,
+  .player.right .stream-player {
+    width: 100%;
+  }
+  .player.left .player-actions,
+  .player.right .player-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .player.left .player-placement,
+  .player.right .player-placement {
+    grid-column: 1 / -1;
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
 .player-placement {
   display: inline-flex;
   align-items: center;
@@ -974,6 +1040,7 @@ dd {
 .player-meta {
   flex: 1;
   min-width: 180px;
+  overflow-wrap: anywhere;
 }
 .player .eyebrow {
   color: var(--color-paper);
@@ -1226,7 +1293,9 @@ dd {
 }
 
 /* ---- Medium screens ------------------------------------------------------ */
-@media (max-width: 900px) {
+/* The masthead wraps on its own width, which a player rail also narrows. One
+   row needs about 1,200 px for the wordmark, five links and the source link. */
+@container masthead (max-width: 1200px) {
   .masthead-inner {
     grid-template-columns: 1fr auto;
     gap: 0.5rem 1rem;
@@ -1238,6 +1307,8 @@ dd {
     margin: 0 -0.25rem;
     padding: 0.1rem 0.25rem;
   }
+}
+@media (max-width: 900px) {
   .directory-list,
   .filter-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
