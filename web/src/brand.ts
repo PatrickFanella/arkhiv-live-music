@@ -94,3 +94,23 @@ export const playerCopy = {
   left: "Left sidebar",
   right: "Right sidebar",
 } as const;
+
+export const shelfCopy = {
+  filterLabel: "Filter the recordings on this page",
+  filterPlaceholder: "Filter this page",
+  order: "Order",
+  catalogOrder: "Catalog order",
+  newestFirst: "Newest first (dated recordings)",
+  columns: { artist: "Artist", title: "Recording", venue: "Venue", date: "Date" },
+  ascending: "ascending",
+  descending: "descending",
+  sortBy: (column: string, direction: string) =>
+    direction
+      ? `Sort this page by ${column}, ${direction}`
+      : `Sort this page by ${column}`,
+  shown: (shown: number, total: number) =>
+    `${shown} of ${total} on this page`,
+  noMatch: (filter: string) =>
+    `No recordings on this page match “${filter}”.`,
+  clearFilter: "Clear filter",
+} as const;

@@ -609,6 +609,73 @@ main {
   text-decoration-color: var(--color-rule-strong);
   text-underline-offset: 3px;
 }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* Filter and sort the loaded page; Order sorts the whole catalog. */
+.shelf-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.shelf-filter {
+  flex: 0 1 18rem;
+}
+.shelf-order {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+}
+.shelf-order select {
+  width: auto;
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.shelf-count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-ink-soft);
+}
+.tape-head {
+  display: grid;
+  grid-template-columns: 2.25rem 36px minmax(0, 1fr) auto 1rem;
+  align-items: center;
+  column-gap: 0.85rem;
+  padding: 0.1rem 0.5rem;
+  border-bottom: 1px solid var(--color-rule-strong);
+}
+.tape-head-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1rem;
+}
+.sort-button {
+  min-height: 1.75rem;
+  padding: 0.1rem 0;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  text-align: left;
+}
+.sort-button:hover:not(:disabled) {
+  background: transparent;
+  color: var(--color-ink);
+}
+.sort-button[aria-pressed="true"] {
+  color: var(--color-marker);
+}
 .tape-list {
   container: tapes / inline-size;
   border-top: 2px solid var(--color-ink);
@@ -686,6 +753,16 @@ main {
   .tape > .artwork-small {
     width: 28px;
     height: 28px;
+  }
+  /* Rows and the header share fixed outer columns so the headings line up. */
+  .tape,
+  .tape-head {
+    grid-template-columns: 2.25rem 36px minmax(0, 1fr) 6.5rem 1rem;
+  }
+  .tape-head-info {
+    display: grid;
+    grid-template-columns: minmax(9rem, 1fr) minmax(0, 2fr) minmax(0, 1.2fr);
+    column-gap: 1rem;
   }
 }
 .recording-year {
@@ -1479,6 +1556,14 @@ dd {
 
 /* ---- Small screens ------------------------------------------------------- */
 @media (max-width: 650px) {
+  .tape-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding-inline: 0.25rem;
+  }
+  .tape-head > [aria-hidden="true"],
+  .tape-head > .tape-number {
+    display: none;
+  }
   header.masthead {
     font-size: 0.8rem;
   }
