@@ -790,16 +790,36 @@ footer p {
 .recording-field-text {
   overflow-wrap: anywhere;
 }
+/* The recording page shows the panel's body at reading width. */
+.recording-page {
+  max-width: 760px;
+}
+.recording-page .detail-title {
+  font-size: 1rem;
+}
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+}
+.recording-page-link {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-weight: 600;
+}
+main h1:focus:not(:focus-visible) {
+  outline: none;
+}
 .related-browse {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 1rem 0;
 }
-.recording-detail dl {
+.recording-body dl {
   margin: 1.25rem 0;
 }
-.recording-detail dl > div {
+.recording-body dl > div {
   display: flex;
   gap: 1rem;
   padding: 0.5rem 0;
@@ -811,7 +831,7 @@ dt {
   text-transform: uppercase;
   color: var(--color-ink-soft);
 }
-.recording-detail dt {
+.recording-body dt {
   flex: 0 0 110px;
   padding-top: 0.15rem;
 }

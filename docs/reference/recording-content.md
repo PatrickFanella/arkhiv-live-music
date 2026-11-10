@@ -22,3 +22,18 @@ separate from the playable tracks.
 **Lineage.** Long chains show a shortened preview, cut at a chain boundary, and
 disclose the full text. Only whitespace is normalized in the preview. An absent
 value reads **Lineage not recorded**.
+
+## Recording page
+
+`/?view=recording&id=<identifier>` is a shareable page for one recording. It
+reloads directly and shows loading, missing-identifier, unavailable or excluded
+(the engine answers 404) and retry states. `web/src/RecordingDetail.tsx` holds the
+body that the page and the side panel share: notes, source, lineage, provenance,
+related browsing and the playable tracks.
+
+A click in a list still opens the side panel. Its **Open recording page** link
+moves to the page and focuses its heading. **Back to recordings** returns through
+browser history, so the list keeps its filters, page and scroll position; a page
+opened from a shared link returns to the home page instead. Opening or inspecting
+another recording never changes what is playing, because the player stays outside
+the page content.
