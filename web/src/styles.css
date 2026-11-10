@@ -320,11 +320,15 @@ main {
 }
 .intro {
   max-width: 760px;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+}
+.intro h1 {
+  font-size: clamp(1.4rem, 2.4vw, 1.85rem);
+  max-width: none;
 }
 .intro p:last-child {
-  font-size: 0.95rem;
-  line-height: 1.45;
+  font-size: 0.88rem;
+  line-height: 1.4;
   color: var(--color-ink-soft);
   max-width: 54ch;
   margin: 0;

@@ -979,7 +979,9 @@ export default function App() {
           key={view === "explore" ? `explore:${search.dimension}` : home ? "home" : "narrowed"}
           initialDimension={view === "explore" && (search.dimension === "venues" || search.dimension === "years") ? search.dimension : "artists"}
           onDimensionChange={view === "explore" ? (dimension) => changeSearch({ ...search, dimension }) : undefined}
-          open={home || view === "explore"}
+          // The sidebar lists the top artists from 1024px, so the home view
+          // starts with the directory closed there.
+          open={(home && !wide) || view === "explore"}
           facets={facets}
           artistPhotos={artistPhotos}
           error={facetError}

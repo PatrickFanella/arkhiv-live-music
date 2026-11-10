@@ -94,7 +94,8 @@ fine pointer and 2.75rem on touch screens.
   smaller show only the artist's first letter or digit, skipping a leading
   "The".
 - **Collection directory:** separate `paper-raised` disclosure below the
-  search card, open on the unfiltered home view only. It previews 12
+  search card, open on the unfiltered home view below 1024px (wider windows
+  list the top artists in the sidebar, so it starts closed there). It previews 12
   suggestions, or 6 at the 480px single-column breakpoint.
 - **Tape shelf:** heading with monospace count and share link, removable
   filter chips below, then a 2px ink rule, hairline rows, red monospace
