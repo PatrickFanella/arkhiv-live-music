@@ -1,16 +1,21 @@
 import { useState } from "react";
 import type { ArtistImage } from "./artist-images";
 import type { RecordingArtwork } from "./artwork";
+import { coverInitial, coverTone } from "./cover";
 
 export default function Artwork({
   recording,
   artist,
   name,
+  cover,
   caption = false,
 }: {
   recording?: RecordingArtwork;
   artist?: ArtistImage;
   name: string;
+  // What a generated cover shows when there is no image: the artist and,
+  // when known, the date. Without it the cover uses `name`.
+  cover?: { artist: string; date?: string };
   caption?: boolean;
 }) {
   const [failed, setFailed] = useState<string[]>([]);
@@ -47,11 +52,15 @@ export default function Artwork({
         />
       ) : (
         <span
-          className="artwork-placeholder"
+          className="artwork-placeholder jcard-cover"
+          data-tone={coverTone(cover?.artist || name)}
+          role={caption ? "img" : undefined}
           aria-label={caption ? "No artwork available" : undefined}
           aria-hidden={caption ? undefined : true}
         >
-          ♪
+          {cover?.date && <span className="jcard-date">{cover.date}</span>}
+          <span className="jcard-artist">{cover?.artist || name}</span>
+          <span className="jcard-initial">{coverInitial(cover?.artist || name)}</span>
         </span>
       )}
       {caption && (

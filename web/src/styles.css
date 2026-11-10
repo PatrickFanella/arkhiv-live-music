@@ -387,6 +387,84 @@ main {
   margin: 0.75rem 0 0;
 }
 
+/* ---- On this day cover row ------------------------------------------------ */
+.cover-shelf {
+  margin-top: 1rem;
+}
+.cover-shelf-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  margin-bottom: 0.5rem;
+}
+.cover-shelf-heading h2 {
+  font-size: 1.15rem;
+}
+.cover-shelf-heading a {
+  margin-left: auto;
+  font-size: 0.82rem;
+  color: var(--color-ink-soft);
+}
+.cover-row {
+  list-style: none;
+  margin: 0;
+  padding: 0.2rem 0.2rem 0.6rem;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(8.5rem, 10rem);
+  gap: 0.9rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+}
+.cover-row li {
+  scroll-snap-align: start;
+  min-width: 0;
+}
+.cover-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.1rem;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font-size: 0.8rem;
+}
+.cover-card:hover:not(:disabled) {
+  background: transparent;
+  color: var(--color-ink);
+}
+.cover-card .artwork-small {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  margin-bottom: 0.35rem;
+  border-radius: var(--radius-label);
+  overflow: hidden;
+}
+.cover-card:hover .artwork-small {
+  outline: 2px solid var(--color-marker);
+  outline-offset: 2px;
+}
+.cover-card > strong,
+.cover-card > span:not(.artwork) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cover-card > span:not(.artwork) {
+  color: var(--color-ink-soft);
+}
+.cover-date {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+
 /* ---- Collection directory ------------------------------------------------ */
 .browse-directory {
   margin-top: 0.75rem;
@@ -1461,6 +1539,77 @@ dd {
   color: var(--color-ink-faint);
   font-size: 1.25rem;
 }
+/* A generated J-card cover: stripe, date and artist. Tones are fixed brand
+   colours with text that keeps 4.5:1 contrast. Small covers show the initial. */
+.jcard-cover {
+  position: relative;
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 9% 9% 8%;
+  overflow: hidden;
+  text-align: left;
+  font-family: var(--font-sans);
+  --cover-bg: #eae3d2;
+  --cover-fg: #1c1915;
+  background: var(--cover-bg);
+  color: var(--cover-fg);
+}
+.jcard-cover::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: max(2px, 4%);
+  background: linear-gradient(
+    to right,
+    var(--color-stripe-red) 0 33.3%,
+    var(--color-stripe-mustard) 33.3% 66.6%,
+    var(--color-stripe-teal) 66.6%
+  );
+}
+.jcard-cover[data-tone="0"] { --cover-bg: #c43a24; --cover-fg: #fbf8f1; }
+.jcard-cover[data-tone="1"] { --cover-bg: #e0a52d; --cover-fg: #1c1915; }
+.jcard-cover[data-tone="2"] { --cover-bg: #2f6b8f; --cover-fg: #fbf8f1; }
+.jcard-cover[data-tone="3"] { --cover-bg: #1c1915; --cover-fg: #f4efe4; }
+.jcard-cover[data-tone="4"] { --cover-bg: #eae3d2; --cover-fg: #1c1915; }
+.jcard-cover[data-tone="5"] { --cover-bg: #a12d1a; --cover-fg: #fbf8f1; }
+.jcard-date {
+  font-family: var(--font-mono);
+  font-size: 7.5cqi;
+  letter-spacing: 0.08em;
+  padding-top: 3%;
+}
+.jcard-artist {
+  margin-top: auto;
+  font-weight: 700;
+  font-size: 13cqi;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.jcard-initial {
+  display: none;
+}
+@container (max-width: 72px) {
+  .jcard-date,
+  .jcard-artist {
+    display: none;
+  }
+  .jcard-initial {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    font-weight: 700;
+    font-size: 52cqi;
+    line-height: 1;
+  }
+}
 .artwork-large {
   max-width: 300px;
   margin: 0.75rem 0;
@@ -1469,6 +1618,9 @@ dd {
 .artwork-large .artwork-placeholder {
   height: 180px;
   object-fit: contain;
+}
+.artwork-large .jcard-cover {
+  width: 180px;
 }
 .artwork-large figcaption {
   font-size: 0.8rem;

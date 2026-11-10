@@ -19,6 +19,7 @@ export const discoveryCopy = {
   exploreShort: "Explore",
   calendarShort: "Calendar",
   topArtists: "Top artists",
+  seeAll: "See all",
   recording: "Recording",
   invalidRecording: "Choose a valid recording identifier.",
   recordingMissing:

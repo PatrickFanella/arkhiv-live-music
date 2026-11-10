@@ -80,6 +80,19 @@ fine pointer and 2.75rem on touch screens.
 - **Search card:** `paper-deep` surface, primary `Find shows` button, dashed
   rule above the filter disclosure. The disclosure opens when a filter it
   holds is applied. Outside the home view the card is compact.
+- **On this day row:** on the unfiltered home view, between the search card and
+  the collection directory, a horizontally scrolling row of square covers for
+  recordings made on today's month and day, one per artist, newest first (up to
+  ten), with the total and a **See all** link to the On this day view. A card
+  opens the recording panel. The row needs the source-discovery module and is
+  left out when the read fails or finds nothing.
+- **Generated covers:** when a recording has no artwork and its artist no
+  image, a J-card cover stands in: the stripe across the top, the date in
+  monospace and the artist in bold. Its tone (marker, mustard, teal, ink,
+  deep paper or deep marker, each with text at 4.5:1 or better) comes from the
+  artist's name, so an artist always gets the same card. Covers 72px and
+  smaller show only the artist's first letter or digit, skipping a leading
+  "The".
 - **Collection directory:** separate `paper-raised` disclosure below the
   search card, open on the unfiltered home view only. It previews 12
   suggestions, or 6 at the 480px single-column breakpoint.

@@ -11,6 +11,7 @@ import {
 } from "./artist-images";
 import { recordingArtwork } from "./artwork";
 import BrowseDirectory from "./BrowseDirectory";
+import OnThisDayShelf from "./OnThisDayShelf";
 import ArtistPage from "./ArtistPage";
 import DateDiscovery from "./DateDiscovery";
 import RecordingDetail, { TrackList } from "./RecordingDetail";
@@ -964,6 +965,16 @@ export default function App() {
             {filterError && <p role="alert">{filterError}</p>}
           </form>
         </section>}
+        {home && supportsDiscovery && (
+          <OnThisDayShelf
+            monthDay={destinations["on-this-day"].month_day}
+            heading={`${discoveryCopy.onThisDay} · ${now.toLocaleDateString(undefined, { month: "long", day: "numeric" })}`}
+            artistPhotos={artistPhotos}
+            open={open}
+            seeAll={navigate(destinations["on-this-day"], "heading")}
+            seeAllHref={`/?${searchQuery(destinations["on-this-day"])}`}
+          />
+        )}
         {view !== "recording" && <BrowseDirectory
           key={view === "explore" ? `explore:${search.dimension}` : home ? "home" : "narrowed"}
           initialDimension={view === "explore" && (search.dimension === "venues" || search.dimension === "years") ? search.dimension : "artists"}
@@ -1179,6 +1190,10 @@ export default function App() {
                   <Artwork
                     artist={artistImageFor(recording.creator, artistPhotos)}
                     name={label(recording.creator)}
+                    cover={{
+                      artist: label(recording.creator) || "Unknown artist",
+                      date: label(recording.date).slice(0, 10),
+                    }}
                   />
                   <span className="tape-info">
                     <strong>
@@ -1427,6 +1442,10 @@ export default function App() {
               artistPhotos,
             )}
             name={label(playing.recording.metadata.title)}
+            cover={{
+              artist: label(playing.recording.metadata.creator) || "Unknown artist",
+              date: label(playing.recording.metadata.date).slice(0, 10),
+            }}
           />
           <div className="player-meta">
             <p className="eyebrow">

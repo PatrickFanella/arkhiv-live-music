@@ -105,6 +105,7 @@ export default function RecordingDetail({
         )}
         artist={artistImageFor(detail.metadata.creator, artistPhotos)}
         name={label(detail.metadata.title) || identifier}
+        cover={{ artist: creator || "Unknown artist", date: date.slice(0, 10) }}
         caption
       />
       <div className="related-browse" aria-label="Browse related recordings">
