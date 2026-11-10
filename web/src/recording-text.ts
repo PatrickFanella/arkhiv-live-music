@@ -26,6 +26,20 @@ const decode = (text: string) =>
       : match;
   });
 
+// Display only: percent-escapes from URLs and file names read as the characters
+// they stand for (`%27` as an apostrophe). A run that does not decode to
+// printable text stays as written; link targets keep their exact form.
+export function readableEscapes(text: string): string {
+  return text.replace(/(?:%[0-9a-f]{2})+/gi, (run) => {
+    try {
+      const decoded = decodeURIComponent(run);
+      return /[\u0000-\u001f\u007f]/.test(decoded) ? run : decoded;
+    } catch {
+      return run;
+    }
+  });
+}
+
 // Only ordinary web links survive. Everything else stays as visible text.
 export function safeHref(value: string): string | undefined {
   try {
@@ -58,6 +72,7 @@ function readSpans(source: string): Span[] {
   let text = "";
   let href: string | undefined;
   const flush = () => {
+    if (text && href && /^\s*https?:\/\//i.test(text)) text = readableEscapes(text);
     if (text) spans.push(href ? { text, href } : { text });
     text = "";
   };
@@ -100,7 +115,7 @@ function linkify(spans: Span[]): Span[] {
       const href = safeHref(url);
       if (!href) continue;
       if (match.index > at) out.push({ text: span.text.slice(at, match.index) });
-      out.push({ text: url, href });
+      out.push({ text: readableEscapes(url), href });
       at = match.index + url.length;
     }
     if (at < span.text.length) out.push({ text: span.text.slice(at) });
