@@ -2,154 +2,91 @@
 
 ![Lineage identity](docs/brand/lineage/readme-lockup.png)
 
-Live recordings, with their lineage. A Live Music Archive consumer with a shared Arkhiv backend and an independent
-React frontend built with `@subcult/archive-viewer`. Metadata always lives in
-Arkhiv's PostgreSQL database. Audio may stream from the source or be preserved
-through Arkhiv's separate reviewed acquisition workflow.
+Live recordings, with their lineage. Lineage is a browser for the Live Music Archive at Internet Archive (the `etree` collection): find a show by artist, venue or date, read who taped it and how the copy came down to you, and play the reviewed tracks.
 
-This repository owns frontend composition, configuration and dependency pins.
-It owns no backend fork, metadata importer or database schema. Backend fixes and
-features are implemented in [Arkhiv](https://git.subcult.tv/subculture-collective/arkhiv)
-and reach this app through the same release-upgrade workflow as its siblings.
-Viewer and engine upgrades remain separate. The product is named Lineage and
-uses the J-Card design system described in `docs/reference/brand.md`; the
-repository, package and Compose project keep the `arkhiv-live-music` name.
+This repository is the Lineage web app and its deployment configuration. The catalog, search API and metadata importer come from SUBCULT's shared archive engine, which runs as a pinned container image. The repository, package and Compose project still use the name `arkhiv-live-music`.
 
-## Shared releases
+Public site: https://lineage.subcult.tv/
 
-The published viewer pin is 0.4.4 and the engine receipt pins core 0.4.4, including
-the source metadata catalog, batch playback reviews and nested audio support from
-[Arkhiv PR 129](https://git.subcult.tv/subculture-collective/arkhiv/pulls/129).
-The engine image uses an immutable registry digest. The viewer retains its
-core 0.3.0 API compatibility receipt; core 0.4.4 preserves those API contracts
-and existing migration checksums. Core 0.4.3 added `source_artist_photos` module 1,
-the artist photograph list used by the directory, recording rows and player. Core
-0.4.4 adds `source_artist_media` module 1: the engine stores each artist photograph
-itself and serves it from `/api/source-catalog/v1/artist-media/{sha256}`, and an
-artist profile can be bound to the artist's Live Music Archive collection.
+## Features
 
-The frontend requires `source_catalog` and `source_discovery` module 1 and checks `/api/version` before
-loading its catalog. `make verify` validates code, configuration and pin provenance;
-it rejects engine receipts that lack the required modules.
+- Search across artists, titles, venues, places, source credits, notes, lineage, subjects and track titles.
+- Filter by year, date range, artist, venue and source availability. Filters, searches and the open recording are kept in the URL, so you can share them and use Back and Forward.
+- Browse counted artist, venue and year directories, with decade shortcuts.
+- A recordings table you can sort and filter, in a compact one-line layout.
+- Recording pages with notes, set lists, source, taper credits and lineage, and links to related artists, venues, dates and places.
+- Artist pages with the artist's recordings, attributed MusicBrainz and Wikipedia text, and photographs.
+- A concert calendar for one year, a range of years or all years, and an "On this day" view for any month and day.
+- Cover art chosen from the recording's own public files, then a curated artist image, then a generated J-card cover.
+- Track-by-track playback, streamed from the source, with a choice of player position (bottom, top, floating, left or right sidebar) that changes without stopping the audio. Phones get a mini bar, a full-screen player and lock-screen controls.
 
-## Run the app
+Limits: playback is track-based and gapless playback is not supported. There is no map. Tours are not separate entities, so tour names are found through text search. An item in the catalog is not always playable: only source files that pass the engine's playback review can be played, and source outages are shown, not hidden.
 
-Requires Docker and pnpm 10.33.0 for frontend development. Copy `.env.example`
-to `.env` and choose unused local ports and credentials.
+## How it works
+
+The archive engine imports metadata from the Live Music Archive in small, resumable batches and stores it in PostgreSQL: the raw source response, parsed fields, every file entry and any editorial corrections. Corrections survive re-imports. Browsing and search read from the database and do not contact Internet Archive. Audio and cover art load directly from Internet Archive in the browser.
+
+Importing metadata does not grant permission to play a file. A separate playback review marks which public audio files can be streamed. A changed or withdrawn source invalidates its earlier review.
+
+## Quick start
+
+Requirements: Docker with Compose, and pnpm 10.33.0 with Node.js 22 or later for frontend work.
 
 ```bash
+cp .env.example .env    # then choose free local ports and a local database password
 docker compose --env-file .env --env-file deploy/archive-core.env up --build
 ```
 
-This uses the published Arkhiv core. Initialization applies Arkhiv migrations
-and selects the etree collection. The metadata worker repeatedly
-runs bounded cursor discovery and full-metadata imports. A complete collection
-import can take days; counts and incomplete discovery remain visible. It never
-acquires audio. The web app defaults to http://localhost:5173.
+This starts PostgreSQL, applies the engine's migrations, selects the `etree` collection, starts the API and a metadata worker, and serves the web app at http://localhost:5173 (or your `WEB_PORT`). The worker imports 100 records per run with a one-second request delay and pauses when its disk has less than 20 GiB free. A full collection import can take several days. It never downloads audio.
 
-For frontend development, run `pnpm --dir web dev`. Vite proxies `/api` to port
-8080 by default; set `API_PROXY=http://127.0.0.1:YOUR_API_PORT` if needed.
-After a kit upgrade, restart Vite with `pnpm --dir web dev --force` to refresh
-its dependency cache.
+Frontend development with hot reload:
 
-For shared-engine development, set `ARKHIV_CORE_SOURCE` to an Arkhiv checkout
-and build its actual core with the optional override:
+```bash
+pnpm --dir web install --frozen-lockfile
+pnpm --dir web dev
+```
+
+Vite proxies `/api` to port 8080. Set `API_PROXY=http://127.0.0.1:PORT` to use another API port. After a dependency upgrade, run `pnpm --dir web dev --force` to refresh Vite's cache.
+
+Checks:
+
+```bash
+make verify          # types, lint, tests, production build, Compose config and dependency pins
+make compose-build   # build the container images without starting them
+```
+
+## Configuration
+
+`.env` (copied from [`.env.example`](.env.example)):
+
+| Variable | Purpose |
+| --- | --- |
+| `PROJECT_NAME` | Compose project name |
+| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_PORT` | Local PostgreSQL |
+| `API_PORT`, `WEB_PORT` | Loopback ports for the API and web app |
+| `COLLECTION_POLICY` | `source_stream` (default) streams audio from the source. Local preservation needs an explicit policy and byte limits, set when the collection is first created. |
+| `MEDIA_BUDGET`, `MEDIA_RESERVE` | Byte limits used only by local preservation |
+| `IMPORT_ROOT` | Folder of metadata, correction and manifest files for operator commands |
+| `PLAYBACK_REVIEW_NOTES` | Note recorded by the optional playback reviewer; it will not start without one |
+
+[`deploy/archive-core.env`](deploy/archive-core.env) pins the archive engine image by digest. [`deploy/core-release.json`](deploy/core-release.json) and [`deploy/viewer-release.json`](deploy/viewer-release.json) record the engine and `@subcult/archive-viewer` versions the app is tested with. The `@subcult` npm scope installs from the registry set in [`web/.npmrc`](web/.npmrc).
+
+To build against a local checkout of the engine source, set `ARKHIV_CORE_SOURCE` and add the override file:
 
 ```bash
 docker compose --env-file .env --env-file deploy/archive-core.env \
   -f docker-compose.yml -f docker-compose.core-dev.yml up --build
 ```
 
-## Metadata and media
-
-Arkhiv retains exact source response bytes, parsed metadata, SHA-256 identities,
-every file entry, observations, normalized fields and editorial history.
-Normalization cleans whitespace, converts HTML notes to searchable text, validates
-dates and may derive a missing venue from a source title. Inferences stay labeled.
-Corrections override source fields and survive re-imports; a null correction
-restores the source value. No set boundaries or source classification are guessed.
-
-The local index searches artists, titles, venues, places, source credits, notes,
-lineage, subjects and track titles. Filters include year, artist, venue, date range
-and source availability. The frontend offers counted artist, venue and year
-suggestion directories, decade shortcuts, removable applied filters, shareable
-search URLs and browser back/forward navigation. Recording details link to related
-artists, venues, dates and place searches. Directories reflect the service's limited
-facet suggestions, not an exhaustive artist or venue inventory. Tour mentions,
-places, songs and credits use the metadata text search; tours are not structured
-entities. No map or geocoding is included.
-
-Cursor discovery covers the full collection beyond the
-Archive search result ceiling. Browsing and details use the database without
-contacting the provider. Refresh/reconciliation is an explicit operator command.
-
-Importing metadata grants no media permission. A separate source-audio review maps
-supported public files to Arkhiv's typed audio representation and resolver.
-Changed source snapshots and withdrawals invalidate stale playback reviews. The
-kit validates resolved URLs and manages audio state, volume and completion; this
-frontend owns track selection and layout. Source failures remain visible and may
-be retried manually. Playback is track-based; gapless playback is unverified.
-
-Safe nested audio paths are supported by the shared engine and kit updates.
-MPEG4 concert recordings can supply an audio-playback fallback when audio-only
-files are absent. Restricted, missing or unsupported files remain searchable;
-approvals describe source permissions rather than guaranteed CDN availability
-or browser codec decoding. Scheduled radio and calendar views have
-not been added to this frontend.
-
-`COLLECTION_POLICY=source_stream` is the default. Local preservation requires
-explicit initial collection policy, byte budget and reserve, then the existing
-Arkhiv manifest, integrity and recovery workflow. The metadata worker is identical
-in both modes. Existing collection policy cannot be switched implicitly.
-
-## Artwork and artist images
-
-Recording details and the player select public cover art or photographs from the
-retained file inventory. Named cover art takes priority. Private files, automatic
-item thumbnails, spectrograms and recognizable waveform derivatives are excluded.
-Artwork loads directly from Internet Archive; missing or failed images fall back
-to a curated artist image, then a placeholder. The catalog rows and artist directory
-use artist images without fetching a separate recording detail for each row.
-
-`web/src/artist-images.ts` holds curated image references separately from source
-metadata. The starter registry includes Ween and Billy Strings photographs and
-Phil Lesh and Grateful Dead logos. Each entry records its exact artist name,
-confirmed aliases, image type, source, credit, rights note and verification date.
-Inspect an image and its source before adding an entry; do not match artists by
-substring or treat an artist photo as a recording cover. Source links appear on
-the detail image. This registry does not establish a reuse license for the images.
-No image binaries or audio are stored in this repository.
-
 ## Operator commands
 
-The metadata worker resumes cursor discovery and imports 100 records per bounded
-run, with a one-second request delay and provider backoff. It pauses below a
-20 GiB free-space reserve on its storage filesystem. Keep the database on durable
-storage and monitor its size; a complete import can take several days. Worker
-logs are rotated. Source bytes and all unknown file entries remain in PostgreSQL.
-
-For continuous private playback coverage, set `PLAYBACK_REVIEW_NOTES` in `.env`
-to record the owner's approval, then enable the independent reviewer:
+Start the playback reviewer, which marks supported public audio files as playable in batches of 100 without fetching any media:
 
 ```bash
-docker compose --env-file .env --env-file deploy/archive-core.env \
-  --profile playback up --build -d
+docker compose --env-file .env --env-file deploy/archive-core.env --profile playback up --build -d
 ```
 
-The reviewer approves supported public source files in batches of 100, without
-fetching media. It skips completed snapshots and records unsupported, held and
-retryable outcomes. It cannot overwrite a separate operator approval or revocation.
-Changed snapshots require a new bound review; only an unchanged batch-owned
-decision can be renewed automatically. The UI refreshes import and playback
-approval counts every 30 seconds while visible. This grants no public publication,
-downloads, acquisition, relay or scheduling permission.
-
-Stop the `metadata-worker` or `playback-reviewer` service to pause its work;
-restarting resumes from PostgreSQL. Do not reset the database to restart discovery.
-
-Put saved metadata, corrections or manifests under `IMPORT_ROOT`. The operator
-profile mounts those inputs at `/imports`. During development, include the same
-`--env-file` and `-f` options shown above in these commands:
+One-off commands run in the `operator` profile, with files from `IMPORT_ROOT` mounted at `/imports`:
 
 ```bash
 docker compose --profile operator run --rm operator \
@@ -160,60 +97,39 @@ docker compose --profile operator run --rm operator \
   --notes 'Venue confirmed from taper notes.'
 
 docker compose --profile operator run --rm operator \
-  review-source-audio --collection etree --id SOURCE_ID --notes 'Private source playback review.'
+  review-source-audio --collection etree --id SOURCE_ID --notes 'Playback review.'
 
 docker compose --profile operator run --rm operator \
   refresh-catalog --collection etree --pages 1 --items 25
 ```
 
-Public source-inventory serving is not enabled. This configuration serves a private
-catalog preview; public catalog and transport reviews use Arkhiv's existing controls.
-No full collection coverage or public deployment is claimed by the small live sample.
+Add the same `--env-file` options as above to these commands. Stop the `metadata-worker` or `playback-reviewer` service to pause it; it resumes from the database when restarted. Do not reset the database to restart discovery.
 
-## Verification and updates
+## Deploy
 
-```bash
-make verify
-make compose-build
+The web app builds into a static nginx image from [`web/Dockerfile`](web/Dockerfile). Run it beside the pinned engine image and PostgreSQL, as in [`docker-compose.yml`](docker-compose.yml), and put HTTPS in front of the web service. Keep the database on durable storage; a full import is large.
+
+## Project layout
+
+```text
+web/          React and Vite frontend (built on @subcult/archive-viewer)
+deploy/       Engine image pin and tested engine and viewer versions
+scripts/      Dependency pin checks
+docs/         Brand assets, reference notes and design records
 ```
 
-Consumer verification covers TypeScript, lint, tests, production build, Compose,
-Open Pilot templates and matching shared dependency receipts. Arkhiv owns backend
-and database verification. Its source-catalog tests cover raw retention, corrections,
-re-imports, refresh, search/filtering, pagination, scope, playback review isolation,
-withdrawals, metadata-only requests and migrations.
+Curated artist images live in [`web/src/artist-images.ts`](web/src/artist-images.ts), separate from source metadata. Each entry records its source, credit and rights note. Check an image and its source before adding one, and match artists by exact name, not substring.
 
-`deploy/core-release.json`, `deploy/archive-core.env` and
-`deploy/viewer-release.json` are the standard consumer upgrade targets. Arkhiv's
-registry records independent engine and viewer lanes. Reviewed upgrade proposals
-update compatible pins alongside the siblings while leaving this app's design
-and deployment timing independent.
+The [reference notes](docs/reference/README.md) cover how recording content is rendered and how player placement works.
 
-GPL-3.0-only applies to the software. Recording terms remain with their sources.
+## Contributing
 
-## Artist pages, calendar and On this day
+- Bugs and feature requests: [GitHub issues](https://github.com/subculture-collective/lineage/issues).
+- Questions and ideas: [GitHub Discussions](https://github.com/subculture-collective/lineage/discussions).
+- Code: pull requests on GitHub against `main`. CI runs `make verify` and builds the container images on every pull request, and both must pass.
 
-Artist pages pair retained recordings with independently cached, attributed
-MusicBrainz/Wikipedia information and photographs. The historical concert calendar
-supports one year, a year range, or all years. On this day lists a chosen month/day
-across years. Dates and filters are shareable through the existing root URL.
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
-These views use Arkhiv `source_discovery` module 1, supplied by the pinned core
-0.4.4 release. The capability guard still reports an outdated runtime rather than
-letting it silently ignore date filters. See [feature behavior and qualification](docs/reference/artist-and-date-discovery.md)
-for behavior and verification. Provider matching and fetching belong to the engine's
-operator workflow, with no provider requests during public page reads.
+## License
 
-## Public address
-
-The public address is https://lineage.subcult.tv/. Canonical metadata, Open Graph
-URL, sitemap and robots discovery use this address.
-
-## Brand assets
-
-The product identity and selected public exports are recorded in [the brand handoff](docs/brand/lineage/GUIDE.md) and [source hashes](docs/brand/lineage/export.json). Regenerate from SUBCULT Studio with `python3 studio/scripts/export_remaining_brand.py lineage /path/to/this/repository`; use `--check` to verify the export without writing.
-
-## Automatic frontend deployment
-
-Verified main builds deploy the public frontend to the existing Dozor service.
-See the [CI deployment and rollback procedure](docs/automatic-frontend-deployment.md).
+The software is licensed under GPL-3.0-only. See [LICENSE](LICENSE). Recordings, artwork and artist images keep the terms set by their sources; the software license does not cover them. Lineage is an independent project and is not endorsed by the artists, tapers or Internet Archive.
