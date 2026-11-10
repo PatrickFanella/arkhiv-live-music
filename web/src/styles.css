@@ -1926,7 +1926,8 @@ dd {
 }
 @media (max-width: 650px) {
   .app-shell {
-    --tabbar: 3.5rem;
+    /* The tab bar's height: two 0.15rem paddings, 2.9rem links and a rule. */
+    --tabbar: calc(3.2rem + 1px);
     padding-bottom: calc(var(--tabbar) + env(safe-area-inset-bottom, 0px));
   }
   .primary-nav {
@@ -1981,6 +1982,153 @@ dd {
   }
   .player.mini {
     bottom: calc(var(--tabbar) + 0.75rem);
+  }
+}
+/* ---- Phone player --------------------------------------------------------- */
+.progress-line,
+.player-expand,
+.player-collapse {
+  display: none;
+}
+@media (max-width: 650px) {
+  /* A compact bar: cover, title, play and next, with a thin progress line.
+     The rest of the bar opens the full-screen player. */
+  .player.compact:not(.expanded) {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0 0.6rem;
+    padding: 0.4rem 0.5rem 0.4rem 0.6rem;
+    overflow: visible;
+    border-top-width: 3px;
+  }
+  .player.compact:not(.expanded) .artwork-small {
+    width: 44px;
+    height: 44px;
+  }
+  .player.compact:not(.expanded) :is(.eyebrow, .player-links, .player-actions, .player-details, .scrubber, .volume, .transport-skip:first-child) {
+    display: none;
+  }
+  .player.compact:not(.expanded) .player-meta {
+    min-width: 0;
+  }
+  .player.compact:not(.expanded) .player-meta strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .player.compact:not(.expanded) .stream-player {
+    display: block;
+    flex: none;
+  }
+  .player.compact:not(.expanded) .stream-error {
+    position: absolute;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 100%;
+    padding: 0.4rem 0.6rem;
+    background: var(--color-ink);
+  }
+  .player.compact:not(.expanded) > [role="alert"] {
+    grid-column: 1 / -1;
+  }
+  .player.compact .progress-line {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: var(--color-stripe-mustard);
+  }
+  .player-expand {
+    display: block;
+    position: absolute;
+    inset: 0 6rem 0 0;
+    z-index: 1;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .player .player-expand:hover:not(:disabled) {
+    background: transparent;
+  }
+  .player-expand:focus-visible {
+    outline-offset: -3px;
+  }
+  .player.compact:not(.expanded) .transport {
+    position: relative;
+    z-index: 2;
+  }
+  /* The full-screen player: large cover art, the transport and the tracklist. */
+  .player.expanded {
+    position: fixed;
+    inset: 0;
+    z-index: 6;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 0.5rem 1.25rem 1.5rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-top: 6px solid;
+    border-bottom: 0;
+  }
+  .player-collapse {
+    display: grid;
+    place-items: center;
+    align-self: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    flex: none;
+  }
+  .player .player-collapse {
+    border-color: transparent;
+  }
+  .player.expanded .artwork {
+    width: min(100%, 20rem);
+    height: auto;
+    aspect-ratio: 1;
+    align-self: center;
+  }
+  .player.expanded .artwork-placeholder {
+    font-size: 3rem;
+  }
+  .player.expanded .player-meta strong {
+    font-size: 1.2rem;
+    line-height: 1.2;
+  }
+  .player.expanded .stream-player {
+    order: 0;
+    flex: none;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.6rem;
+  }
+  .player.expanded .scrubber {
+    order: 1;
+  }
+  .player.expanded .transport {
+    order: 2;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+  .player.expanded .transport-play {
+    width: 4rem;
+    height: 4rem;
+  }
+  .player.expanded .player-details {
+    flex: none;
+    max-height: none;
+    overflow: visible;
+  }
+  /* The tracklist is always open here, so its toggle and header step aside. */
+  .player.expanded :is(.player-links button, .player-details-head) {
+    display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {

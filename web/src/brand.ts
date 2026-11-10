@@ -102,6 +102,8 @@ export const playerCopy = {
   loading: "Loading",
   mute: "Mute",
   volume: "Volume",
+  openPlayer: "Open player",
+  closePlayer: "Close player",
   bottom: "Bottom bar",
   top: "Top bar",
   mini: "Floating mini",

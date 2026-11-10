@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { clock, useAudioControls } from "@subcult/archive-viewer/audio";
 import type { Track } from "./archive";
 import { playerCopy } from "./brand";
@@ -27,6 +27,9 @@ export default function StreamPlayer({
   onNext,
   hasPrevious,
   hasNext,
+  title,
+  artist,
+  album,
 }: {
   track: Track;
   onEnded: () => void;
@@ -34,6 +37,9 @@ export default function StreamPlayer({
   onNext: () => void;
   hasPrevious: boolean;
   hasNext: boolean;
+  title: string;
+  artist: string;
+  album: string;
 }) {
   const audio = useRef<HTMLAudioElement>(null);
   const [duration, setDuration] = useState(Number.MAX_SAFE_INTEGER);
@@ -45,6 +51,42 @@ export default function StreamPlayer({
     initialVolume: 0.7,
   });
   const known = duration < Number.MAX_SAFE_INTEGER;
+  // Lock-screen and headset controls (Media Session) drive the same transport.
+  const latest = useRef({ controls, onNext, onPrevious, hasNext, hasPrevious });
+  useEffect(() => {
+    latest.current = { controls, onNext, onPrevious, hasNext, hasPrevious };
+  });
+  useEffect(() => {
+    const session = typeof navigator !== "undefined" ? navigator.mediaSession : undefined;
+    if (!session || typeof MediaMetadata === "undefined") return;
+    session.metadata = new MediaMetadata({ title, artist, album });
+    const handlers: [MediaSessionAction, MediaSessionActionHandler][] = [
+      ["play", () => { if (audio.current?.paused) void latest.current.controls.toggle(); }],
+      ["pause", () => { if (!audio.current?.paused) void latest.current.controls.toggle(); }],
+      ["previoustrack", () => { if (latest.current.hasPrevious) latest.current.onPrevious(); }],
+      ["nexttrack", () => { if (latest.current.hasNext) latest.current.onNext(); }],
+      ["seekto", (details) => {
+        if (typeof details.seekTime === "number") latest.current.controls.seek(details.seekTime);
+      }],
+    ];
+    for (const [action, handler] of handlers) {
+      try {
+        session.setActionHandler(action, handler);
+      } catch {
+        /* An unsupported action is left to the browser. */
+      }
+    }
+    return () => {
+      for (const [action] of handlers) {
+        try {
+          session.setActionHandler(action, null);
+        } catch {
+          /* Nothing was registered. */
+        }
+      }
+      session.metadata = null;
+    };
+  }, [title, artist, album]);
   const position = Math.min(controls.position, known ? duration : controls.position);
   // Previous restarts the track after its first few seconds, like most players.
   const restart = controls.position > 3;
@@ -62,6 +104,11 @@ export default function StreamPlayer({
           if (seconds && Number.isFinite(seconds)) setDuration(seconds);
           if (audio.current?.paused) void controls.toggle();
         }}
+      />
+      <span
+        className="progress-line"
+        aria-hidden="true"
+        style={{ width: known && duration > 0 ? `${(position / duration) * 100}%` : "0%" }}
       />
       <div className="transport">
         <button

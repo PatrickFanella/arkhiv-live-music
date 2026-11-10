@@ -58,16 +58,18 @@ type Catalog = {
   cursor?: string;
   status: ImportStatus;
 };
-function subscribeWide(onChange: () => void) {
-  if (typeof window === "undefined" || !window.matchMedia) return () => {};
-  const query = window.matchMedia(railQuery);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-function useWide() {
+// Phones get the mini bar and full-screen player; keep in step with the 650px
+// breakpoint in styles.css.
+const phoneQuery = "(max-width: 650px)";
+function useMedia(query: string) {
   return useSyncExternalStore(
-    subscribeWide,
-    () => window.matchMedia?.(railQuery).matches ?? false,
+    (onChange) => {
+      if (typeof window === "undefined" || !window.matchMedia) return () => {};
+      const list = window.matchMedia(query);
+      list.addEventListener("change", onChange);
+      return () => list.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia?.(query).matches ?? false,
     () => false,
   );
 }
@@ -120,11 +122,37 @@ export default function App() {
   const hasPlayer = !!playing;
   // A sidebar is a listening view: its tracklist opens with it and closes when
   // the player leaves the sidebar or the window falls back to the bottom bar.
-  const wide = useWide();
+  const wide = useMedia(railQuery);
   const railShown = isRail(placement) && wide;
   useEffect(() => {
     if (hasPlayer) setPlayerDetails(railShown);
   }, [railShown, hasPlayer]);
+  // On phones every placement but the mini player is a compact bar that opens
+  // a full-screen player. The rest of the page is inert while it is open.
+  const phone = useMedia(phoneQuery);
+  const compact = phone && placement !== "mini";
+  const [expanded, setExpanded] = useState(false);
+  const fullScreen = compact && expanded && hasPlayer;
+  const expandButton = useRef<HTMLButtonElement>(null);
+  const collapseButton = useRef<HTMLButtonElement>(null);
+  const expandPlayer = () => {
+    setExpanded(true);
+    setPlayerDetails(true);
+  };
+  const collapsePlayer = () => {
+    setExpanded(false);
+    setPlayerDetails(false);
+  };
+  useEffect(() => {
+    if (!compact || !hasPlayer) setExpanded(false);
+  }, [compact, hasPlayer]);
+  const wasFullScreen = useRef(false);
+  useEffect(() => {
+    if (fullScreen) collapseButton.current?.focus({ preventScroll: true });
+    else if (wasFullScreen.current)
+      expandButton.current?.focus({ preventScroll: true });
+    wasFullScreen.current = fullScreen;
+  }, [fullScreen]);
   const [railWidth, setRailWidth] = useState(readRailWidth);
   const resizeRail = (width: number) => {
     const next = clampRail(width, window.innerWidth);
@@ -677,7 +705,7 @@ export default function App() {
       style={{ "--rail-width": `${railWidth}px` } as CSSProperties}
     >
       <div className="stripes" aria-hidden="true" />
-      <header className="masthead">
+      <header className="masthead" inert={fullScreen}>
         <div className="masthead-inner">
           <a
             className="wordmark"
@@ -751,7 +779,7 @@ export default function App() {
           </a>
         </div>
       </header>
-      <main ref={page}>
+      <main ref={page} inert={fullScreen}>
         {search.artist && (view === "artist" || view === "search") && (
             <ArtistPage
               key={search.artist}
@@ -1321,14 +1349,42 @@ export default function App() {
       {playing && current && (
         <aside
           ref={dock}
-          className={`player ${placement}`}
+          className={`player ${placement}${compact ? " compact" : ""}${fullScreen ? " expanded" : ""}`}
           aria-label="Audio player"
           onKeyDown={(event) => {
-            if (event.key !== "Escape" || !playerDetails) return;
-            event.stopPropagation();
-            closePlayerDetails();
+            if (event.key !== "Escape") return;
+            if (fullScreen) {
+              event.stopPropagation();
+              collapsePlayer();
+            } else if (playerDetails) {
+              event.stopPropagation();
+              closePlayerDetails();
+            }
           }}
         >
+          {fullScreen && (
+            <button
+              ref={collapseButton}
+              type="button"
+              className="player-collapse"
+              aria-label={playerCopy.closePlayer}
+              onClick={collapsePlayer}
+            >
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" focusable="false">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+          )}
+          {compact && !fullScreen && (
+            <button
+              ref={expandButton}
+              type="button"
+              className="player-expand"
+              aria-label={playerCopy.openPlayer}
+              aria-expanded={false}
+              onClick={expandPlayer}
+            />
+          )}
           {railShown && (
             <div
               className="rail-resizer"
@@ -1385,7 +1441,10 @@ export default function App() {
             <div className="player-links">
               <a
                 href={`/?${searchQuery(recordingPage(playing.identifier))}`}
-                onClick={navigate(recordingPage(playing.identifier), "top", true)}
+                onClick={(event) => {
+                  if (fullScreen && plainClick(event)) collapsePlayer();
+                  navigate(recordingPage(playing.identifier), "top", true)(event);
+                }}
               >
                 {playerCopy.openRecording}
               </a>
@@ -1413,6 +1472,9 @@ export default function App() {
             onPrevious={retreat}
             hasNext={!resolving && playing.index + 1 < playing.tracks.length}
             hasPrevious={!resolving && playing.index > 0}
+            title={trackDisplayTitle(current)}
+            artist={label(playing.recording.metadata.creator)}
+            album={label(playing.recording.metadata.title)}
           />
           <div className="player-actions">
             <label className="player-placement">
