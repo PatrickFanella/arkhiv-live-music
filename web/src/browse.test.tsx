@@ -4,12 +4,20 @@ import BrowseDirectory from "./BrowseDirectory";
 import {
   emptySearch,
   readPages,
+  readScroll,
   readSearch,
   searchQuery,
   validateDates,
 } from "./browse";
 
 describe("Catalog browsing", () => {
+  it("reads only a valid saved scroll position from history state", () => {
+    expect(readScroll({ scroll: 480 })).toBe(480);
+    expect(readScroll({ scroll: 0 })).toBe(0);
+    for (const state of [null, {}, { scroll: "480" }, { scroll: -1 }, { scroll: NaN }])
+      expect(readScroll(state)).toBeUndefined();
+  });
+
   it("round trips shared searches including punctuation, dates, and page cursors", () => {
     const search = {
       ...emptySearch,

@@ -285,6 +285,13 @@ header.masthead {
   color: var(--color-ink-soft);
   white-space: nowrap;
 }
+main h1,
+.catalog-heading {
+  scroll-margin-top: calc(var(--scroll-offset, 0px) + 1rem);
+}
+.catalog[aria-busy="true"] {
+  min-height: 100vh;
+}
 main {
   width: var(--content);
   margin-inline: auto;
