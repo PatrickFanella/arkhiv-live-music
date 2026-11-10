@@ -13,7 +13,9 @@ The shell reorders around the player with CSS because moving the element in the
 document would remount the audio. `--player-height` reserves page space for the
 final row. `--scroll-offset` keeps reveal targets below the top bar.
 
-The sidebars need a window at least 1024 px wide. The shell gains padding on the
+The sidebars need a window at least 1024 px wide. The left rail, bottom bar and
+top bar start at the navigation sidebar's edge, and on phones the bottom bar and
+mini player sit above the tab bar. The shell gains padding on the
 chosen side, so the masthead, page and footer reflow beside the rail instead of
 under it. In narrower windows the player shows the bottom bar while the saved
 sidebar choice stays selected; widening the window restores the rail. A long queue

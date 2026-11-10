@@ -1681,6 +1681,180 @@ dd {
     align-items: start;
   }
 }
+/* ---- Navigation shell ---------------------------------------------------- */
+/* Like a music player: a fixed navigation sidebar on wide windows and a tab bar
+   on phones. Between them the masthead stays a top bar. These rules follow the
+   masthead container query so they win over it. */
+.nav-icon,
+.nav-short,
+.sidebar-artists {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .app-shell {
+    --nav: 13.5rem;
+    padding-left: var(--nav);
+  }
+  .app-shell.player-left {
+    padding-left: calc(var(--nav) + var(--rail));
+  }
+  header.masthead {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 3;
+    width: var(--nav);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--color-paper);
+    border-bottom: 0;
+    border-right: 1px solid var(--color-rule);
+  }
+  .masthead-inner {
+    width: auto;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.25rem;
+    padding: 1rem 0.6rem;
+  }
+  .wordmark {
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0 0.5rem;
+  }
+  .primary-nav {
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .primary-nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.5rem;
+    white-space: normal;
+  }
+  .nav-icon {
+    display: block;
+    flex: none;
+  }
+  .sidebar-artists {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .sidebar-artists .eyebrow {
+    padding: 0 0.5rem 0.35rem;
+  }
+  .sidebar-artists a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-label);
+    text-decoration: none;
+    color: var(--color-ink-soft);
+    font-size: 0.82rem;
+  }
+  .sidebar-artists a:hover,
+  .sidebar-artists a[aria-current="page"] {
+    background: var(--color-paper-deep);
+    color: var(--color-ink);
+  }
+  .sidebar-artists .artwork-small {
+    width: 22px;
+    height: 22px;
+  }
+  .sidebar-artist-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sidebar-artists small {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+  }
+  .source-link {
+    margin-top: auto;
+    padding: 0 0.5rem;
+    white-space: normal;
+    font-size: 0.78rem;
+  }
+  /* The player keeps clear of the navigation. */
+  .player.bottom,
+  .player.left {
+    left: var(--nav);
+  }
+  .player.left .rail-resizer {
+    left: calc(var(--nav) + var(--rail) - 5px);
+  }
+}
+@media (max-width: 650px) {
+  .app-shell {
+    --tabbar: 3.5rem;
+    padding-bottom: calc(var(--tabbar) + env(safe-area-inset-bottom, 0px));
+  }
+  .primary-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    gap: 0;
+    margin: 0;
+    padding: 0.15rem 0.25rem calc(0.15rem + env(safe-area-inset-bottom, 0px));
+    overflow: visible;
+    background: var(--color-paper);
+    border-top: 1px solid var(--color-rule);
+  }
+  .primary-nav a {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.9rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 0.2rem 0.1rem;
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+  .primary-nav a[aria-current="page"] {
+    background: transparent;
+    color: var(--color-marker);
+    font-weight: 600;
+  }
+  .nav-icon {
+    display: block;
+  }
+  .nav-short {
+    display: inline;
+  }
+  /* The full label stays the link's accessible name. */
+  .nav-long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .player.bottom {
+    bottom: calc(var(--tabbar) + env(safe-area-inset-bottom, 0px));
+  }
+  .player.mini {
+    bottom: calc(var(--tabbar) + 0.75rem);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
