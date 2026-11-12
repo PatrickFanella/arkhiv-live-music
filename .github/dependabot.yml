@@ -1,0 +1,42 @@
+# Quiet by design: one grouped minor/patch pull request per ecosystem each
+# month, direct dependencies only, no major versions. Ready pull requests in
+# this organization merge themselves and main deploys.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      # Pinned with deploy/viewer-release.json and upgraded through Arkhiv's release lane.
+      - dependency-name: "@subcult/archive-viewer"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      actions-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: docker
+    directory: /web
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      docker-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
