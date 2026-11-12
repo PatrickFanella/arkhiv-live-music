@@ -1,6 +1,6 @@
 # Contributing
 
-This repository is a base template for derived SUBCULT projects. Keep changes small, reviewable, and useful across stacks.
+Lineage is a React/TypeScript frontend on SUBCULT's shared archive engine. Keep changes small and reviewable. Backend changes belong in the engine's repository; see [AGENTS.md](AGENTS.md).
 
 ## Development flow
 
@@ -21,10 +21,10 @@ This repository is a base template for derived SUBCULT projects. Keep changes sm
 Prefer concise conventional-style subjects:
 
 ```text
-feat: add stack recipe
+feat: sort and filter the recordings table
 docs: update Open Pilot guidance
-fix: correct make target detection
-chore: refresh template metadata
+fix(web): keep artist page text inside narrow screens
+chore: refresh dependencies
 ```
 
 ## Open Pilot issues
@@ -56,18 +56,10 @@ Default full check:
 make verify
 ```
 
-Examples for derived templates:
+Narrower examples:
 
 ```bash
-go test ./...
 pnpm --dir web run test
-uv run pytest
-cargo test --all
-docker compose config --quiet
+pnpm --dir web run typecheck
+make compose-config
 ```
-
-## Template boundaries
-
-This base template should stay stack-neutral. Do not add application scaffolding here unless the issue explicitly changes the role of this repository.
-
-Stack-specific scaffolds should live in derived template repositories.

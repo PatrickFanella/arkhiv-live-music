@@ -60,7 +60,8 @@ date/artist views must honor source-catalog exclusions.
 
 ## Frontend delivery
 
-The native template-check workflow deploys the frontend from verified main.
+The GitHub Actions `Deploy` workflow deploys the frontend from main; pull requests
+are verified by `PR CI`. The Gitea `template-check` workflow only verifies.
 Use docs/automatic-frontend-deployment.md for its scoped Dozor profile and rollback.
 Shared-engine pins, metadata workers, media review and acquisition keep their own
 release/operator lanes.

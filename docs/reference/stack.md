@@ -12,6 +12,6 @@ are independently pinned under `deploy/` and upgraded through Arkhiv's registry.
 
 The product is named Lineage and uses the J-Card design system; see
 [brand.md](brand.md) and [ADR 0002](../adr/0002-lineage-brand-and-j-card-design-system.md).
-See the root README for the pinned core 0.4.4 release, full-import/review workers,
-optional development override,
-operator commands and verification.
+The pinned core and viewer versions are recorded in `deploy/core-release.json`
+and `deploy/viewer-release.json`. See the root README for the full-import/review
+workers, optional development override, operator commands and verification.

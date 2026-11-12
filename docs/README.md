@@ -13,7 +13,6 @@ records feature behavior and shared-engine compatibility.
 - `runbooks/` — repeatable operational procedures
 - `labels.md` — Open Pilot label lifecycle
 - `open-pilot.md` — how to prepare issues for Open Pilot
-- `stacks.md` — inherited template recipes, retained as reference
-- `template-maintenance.md` — inherited template-maintenance reference
+- `automatic-frontend-deployment.md` — how main is deployed to the public site
 
 Keep docs current, concise, and linked from this hub.

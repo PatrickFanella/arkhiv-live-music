@@ -2,15 +2,13 @@
 
 ## Supported scope
 
-This repository is a public base template. Security work here focuses on safe defaults, secret hygiene, and guidance for derived projects.
-
-Derived repositories should add stack-specific security policy details before production use.
+This policy covers the Lineage web app and the deployment configuration in this repository, as served at https://lineage.subcult.tv/. The catalog and search API come from SUBCULT's shared archive engine.
 
 ## Reporting a vulnerability
 
 Do not publish sensitive vulnerabilities in public issues.
 
-Report privately to the repository owner or organization maintainer through the preferred private channel for the project. If no project-specific channel exists, contact the maintainer account for the Gitea organization.
+Report privately through [GitHub private vulnerability reporting](https://github.com/subculture-collective/lineage/security/advisories/new).
 
 Include:
 
@@ -35,9 +33,9 @@ Use placeholders in docs and examples. Report only secret key names and presence
 
 ## Dependency and supply-chain hygiene
 
-Derived templates should:
+This repository should:
 
-- commit lockfiles for application projects when the stack expects them
+- commit `web/pnpm-lock.yaml`
 - pin container base images deliberately
 - document update procedures
 - run dependency and container scans where appropriate

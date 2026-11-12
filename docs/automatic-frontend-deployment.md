@@ -1,9 +1,12 @@
 # Automatic frontend deployment
 
-The native Gitea `template-check` workflow retains the full consumer verification
-and Compose build, then builds and validates the frontend image on PRs. Main
-pushes and manual main dispatch deploy that exact image to the existing Dozor
-`lineage-web` container, Compose service `web`. The backend stays on its reviewed
+The GitHub Actions `PR CI` workflow runs the full consumer verification and
+Compose build on pull requests. On main pushes and manual main dispatch, the
+`Deploy` workflow (`.github/workflows/deploy.yml`) joins the tailnet, builds and
+validates the frontend image and deploys that exact image to the existing Dozor
+`lineage-web` container, Compose service `web`. The receiver deploys only the
+revision that is current on the Gitea copy of main, so the job waits for the
+GitHub-to-Gitea copy. The Gitea `template-check` workflow only verifies. The backend stays on its reviewed
 immutable Arkhiv core pin; metadata workers, PostgreSQL and media volumes keep
 their independent release and preservation procedures.
 
